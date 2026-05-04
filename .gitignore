@@ -37,6 +37,8 @@ yarn-error.log*
 
 # database and uploads (local only)
 *.db
+*.db-shm
+*.db-wal
 uploads/
 
 # vercel
