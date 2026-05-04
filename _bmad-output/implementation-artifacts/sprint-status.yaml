@@ -1,0 +1,87 @@
+# generated: 2026-05-04
+# last_updated: 2026-05-04
+# project: 3d-hub
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: _bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - Developer typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-05-04
+last_updated: 2026-05-04
+project: 3d-hub  # updated: story 1-1 review, epic-1 in-progress
+project_key: NOKEY
+tracking_system: file-system
+story_location: _bmad-output/implementation-artifacts
+
+development_status:
+  # Epic 1: Platform Foundation & Authentication
+  epic-1: in-progress
+  1-1-project-setup-design-system-foundation: review
+  1-2-database-schema-user-data-layer: backlog
+  1-3-authentication-infrastructure-route-protection: backlog
+  1-4-user-registration: backlog
+  1-5-user-login-session-persistence: backlog
+  epic-1-retrospective: optional
+
+  # Epic 2: Model Upload & Publishing
+  epic-2: backlog
+  2-1-model-database-schema-repository-layer: backlog
+  2-2-file-photo-upload-apis-storage-abstraction: backlog
+  2-3-upload-wizard-shell-steps-1-2-files-photos: backlog
+  2-4-upload-wizard-steps-3-5-metadata-tags-preview-publish: backlog
+  epic-2-retrospective: optional
+
+  # Epic 3: Model Discovery & Browsing
+  epic-3: backlog
+  3-1-search-discovery-data-layer: backlog
+  3-2-model-card-component-homepage-grid: backlog
+  3-3-category-pages-navigation: backlog
+  3-4-search-bar-filters-empty-states: backlog
+  epic-3-retrospective: optional
+
+  # Epic 4: Model Evaluation & Download
+  epic-4: backlog
+  4-1-model-detail-page: backlog
+  4-2-download-flow-registration-gate: backlog
+  epic-4-retrospective: optional
+
+  # Epic 5: Creator Profiles & User Collections
+  epic-5: backlog
+  5-1-public-creator-profile-page: backlog
+  5-2-download-history-library: backlog
+  5-3-model-bookmarks: backlog
+  epic-5-retrospective: optional
+
+  # Epic 6: SEO, Sitemap & Pre-Launch Readiness
+  epic-6: backlog
+  6-1-sitemap-robots-seo-metadata-completeness: backlog
+  6-2-pre-launch-quality-verification-model-seeding: backlog
+  epic-6-retrospective: optional

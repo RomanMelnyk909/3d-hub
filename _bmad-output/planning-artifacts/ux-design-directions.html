@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D Hub — Design Direction Showcase</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --sage: #4A7C59;
+    --sage-dark: #3A6347;
+    --sage-light: #D4EDDA;
+    --bg: #F8FAF8;
+    --white: #FFFFFF;
+    --border: #E2EBE4;
+    --text: #111827;
+    --muted: #6B7280;
+    --error: #DC2626;
+    --amber: #D97706;
+  }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: #1a1a1a;
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ─── SHOWCASE SHELL ─── */
+  .showcase-header {
+    background: #111;
+    color: #fff;
+    padding: 32px 48px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 1px solid #333;
+  }
+  .showcase-header h1 { font-size: 1.25rem; font-weight: 600; margin-bottom: 4px; }
+  .showcase-header p { font-size: 0.875rem; color: #aaa; }
+  .direction-nav {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px;
+  }
+  .direction-nav a {
+    background: #222; color: #ccc; border: 1px solid #333;
+    padding: 6px 14px; border-radius: 20px; font-size: 0.75rem;
+    text-decoration: none; transition: all 0.2s;
+  }
+  .direction-nav a:hover { background: var(--sage); color: #fff; border-color: var(--sage); }
+
+  .direction-section {
+    margin: 48px auto;
+    max-width: 1400px;
+    padding: 0 24px;
+  }
+  .direction-label {
+    color: #888; font-size: 0.75rem; font-weight: 500; letter-spacing: 0.1em;
+    text-transform: uppercase; margin-bottom: 8px;
+  }
+  .direction-title {
+    color: #fff; font-size: 1.5rem; font-weight: 700; margin-bottom: 6px;
+  }
+  .direction-desc {
+    color: #aaa; font-size: 0.875rem; margin-bottom: 24px; max-width: 600px;
+  }
+  .mockup-frame {
+    border-radius: 12px; overflow: hidden;
+    border: 1px solid #333;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+  .browser-bar {
+    background: #2a2a2a; padding: 10px 16px; display: flex; align-items: center; gap: 8px;
+  }
+  .browser-dot { width: 12px; height: 12px; border-radius: 50%; }
+  .browser-dot.red { background: #ff5f57; }
+  .browser-dot.yellow { background: #ffbd2e; }
+  .browser-dot.green { background: #28c840; }
+  .browser-url {
+    flex: 1; background: #1a1a1a; border-radius: 6px; padding: 4px 12px;
+    color: #888; font-size: 0.75rem; margin: 0 8px;
+  }
+
+  /* ─── SHARED PHOTO PLACEHOLDER ─── */
+  .photo-placeholder {
+    width: 100%; background: linear-gradient(135deg, #c8d8c8 0%, #a8c0a8 40%, #8aaa8a 100%);
+    display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden;
+  }
+  .photo-placeholder::after {
+    content: '📷';
+    font-size: 1.5rem; opacity: 0.4;
+  }
+  .photo-placeholder.tall { height: 180px; }
+  .photo-placeholder.medium { height: 140px; }
+  .photo-placeholder.short { height: 110px; }
+  .photo-placeholder.hero { height: 320px; }
+  .photo-placeholder.featured { height: 400px; }
+
+  /* ─── SHARED TAG ─── */
+  .tag {
+    display: inline-block; background: var(--sage-light); color: var(--sage);
+    border-radius: 20px; padding: 2px 10px; font-size: 0.7rem; font-weight: 500;
+  }
+  .tag.dark { background: rgba(74,124,89,0.15); }
+
+  /* ─── SHARED BADGE ─── */
+  .badge {
+    display: inline-block; background: var(--sage); color: #fff;
+    border-radius: 4px; padding: 2px 8px; font-size: 0.65rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .badge.amber { background: var(--amber); }
+
+  /* ────────────────────────────────────────────────
+     DIRECTION 1: MINIMAL GALLERY
+  ──────────────────────────────────────────────── */
+  .d1-nav {
+    background: var(--white); border-bottom: 1px solid var(--border);
+    padding: 0 32px; display: flex; align-items: center; height: 56px; gap: 16px;
+  }
+  .d1-logo { font-size: 1.1rem; font-weight: 700; color: var(--sage); letter-spacing: -0.02em; }
+  .d1-search {
+    flex: 1; max-width: 480px; position: relative;
+  }
+  .d1-search input {
+    width: 100%; border: 1.5px solid var(--border); border-radius: 8px;
+    padding: 7px 12px 7px 36px; font-size: 0.875rem; color: var(--text);
+    background: var(--bg); outline: none; font-family: inherit;
+  }
+  .d1-search-icon {
+    position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+    color: var(--muted); font-size: 0.875rem;
+  }
+  .d1-nav-right { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+  .btn-ghost {
+    padding: 6px 14px; border-radius: 7px; border: 1.5px solid var(--border);
+    background: transparent; font-size: 0.8rem; font-weight: 500; cursor: pointer;
+    color: var(--text); font-family: inherit;
+  }
+  .btn-primary {
+    padding: 6px 14px; border-radius: 7px; border: none;
+    background: var(--sage); color: #fff; font-size: 0.8rem; font-weight: 500;
+    cursor: pointer; font-family: inherit;
+  }
+  .d1-body { background: var(--bg); padding: 24px 32px; }
+  .d1-cats { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+  .d1-cat {
+    padding: 5px 14px; border-radius: 20px; border: 1.5px solid var(--border);
+    background: var(--white); font-size: 0.8rem; cursor: pointer; color: var(--muted);
+  }
+  .d1-cat.active { background: var(--sage); color: #fff; border-color: var(--sage); }
+  .d1-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .d1-card {
+    background: var(--white); border-radius: 10px; overflow: hidden;
+    border: 1px solid var(--border); transition: box-shadow 0.2s;
+  }
+  .d1-card:hover { box-shadow: 0 4px 20px rgba(74,124,89,0.12); }
+  .d1-card-meta { padding: 10px 12px; }
+  .d1-card-title { font-size: 0.875rem; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .d1-card-sub { font-size: 0.75rem; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+  .d1-card-sub span { display: flex; align-items: center; gap: 3px; }
+
+  /* ────────────────────────────────────────────────
+     DIRECTION 2: EDITORIAL FEATURED
+  ──────────────────────────────────────────────── */
+  .d2-nav {
+    background: var(--white); border-bottom: 1px solid var(--border);
+    padding: 0 32px; display: flex; align-items: center; height: 56px; gap: 20px;
+  }
+  .d2-logo { font-size: 1.1rem; font-weight: 700; color: var(--sage); }
+  .d2-nav-links { display: flex; gap: 0; }
+  .d2-nav-link {
+    padding: 0 14px; height: 56px; display: flex; align-items: center;
+    font-size: 0.8rem; color: var(--muted); border-bottom: 2px solid transparent;
+    cursor: pointer; font-weight: 500;
+  }
+  .d2-nav-link.active { color: var(--sage); border-bottom-color: var(--sage); }
+  .d2-search { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+  .d2-search input {
+    border: 1.5px solid var(--border); border-radius: 7px;
+    padding: 6px 12px; font-size: 0.8rem; width: 200px;
+    outline: none; font-family: inherit;
+  }
+  .d2-body { background: var(--bg); }
+  .d2-featured {
+    padding: 24px 32px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+  }
+  .d2-featured-card {
+    background: var(--white); border-radius: 12px; overflow: hidden;
+    border: 1px solid var(--border); display: flex; flex-direction: column;
+  }
+  .d2-featured-badge { position: relative; }
+  .d2-featured-badge .badge { position: absolute; top: 12px; left: 12px; z-index: 1; }
+  .d2-featured-meta { padding: 16px; }
+  .d2-featured-title { font-size: 1rem; font-weight: 700; margin-bottom: 6px; }
+  .d2-featured-desc { font-size: 0.8rem; color: var(--muted); margin-bottom: 10px; line-height: 1.5; }
+  .d2-featured-footer { display: flex; align-items: center; justify-content: space-between; }
+  .d2-section-label {
+    padding: 0 32px 12px; font-size: 0.75rem; font-weight: 600;
+    color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em;
+    border-top: 1px solid var(--border); padding-top: 20px;
+  }
+  .d2-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; padding: 0 32px 24px; }
+  .d2-card {
+    background: var(--white); border-radius: 8px; overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .d2-card-meta { padding: 8px 10px; }
+  .d2-card-title { font-size: 0.8rem; font-weight: 600; margin-bottom: 3px; }
+  .d2-card-sub { font-size: 0.7rem; color: var(--muted); }
+
+  /* ────────────────────────────────────────────────
+     DIRECTION 3: CARD SPOTLIGHT (3-col rich cards)
+  ──────────────────────────────────────────────── */
+  .d3-nav {
+    background: var(--sage); padding: 0 32px;
+    display: flex; align-items: center; height: 56px; gap: 16px;
+  }
+  .d3-logo { font-size: 1.1rem; font-weight: 700; color: #fff; }
+  .d3-search {
+    flex: 1; max-width: 400px; position: relative;
+  }
+  .d3-search input {
+    width: 100%; border: none; border-radius: 8px;
+    padding: 7px 12px; font-size: 0.875rem;
+    background: rgba(255,255,255,0.2); color: #fff; outline: none;
+    font-family: inherit;
+  }
+  .d3-search input::placeholder { color: rgba(255,255,255,0.6); }
+  .d3-nav-right { margin-left: auto; display: flex; gap: 8px; }
+  .btn-white {
+    padding: 6px 14px; border-radius: 7px; border: 1.5px solid rgba(255,255,255,0.4);
+    background: transparent; color: #fff; font-size: 0.8rem; font-weight: 500; cursor: pointer; font-family: inherit;
+  }
+  .btn-white-solid {
+    padding: 6px 14px; border-radius: 7px; border: none;
+    background: #fff; color: var(--sage); font-size: 0.8rem; font-weight: 600; cursor: pointer; font-family: inherit;
+  }
+  .d3-subheader {
+    background: var(--sage-dark); padding: 8px 32px; display: flex; gap: 0;
+  }
+  .d3-sub-link {
+    padding: 4px 14px; color: rgba(255,255,255,0.7); font-size: 0.78rem;
+    border-radius: 4px; cursor: pointer;
+  }
+  .d3-sub-link.active { background: rgba(255,255,255,0.15); color: #fff; }
+  .d3-body { background: var(--bg); padding: 24px 32px; }
+  .d3-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .d3-toolbar-left { font-size: 0.875rem; color: var(--muted); }
+  .d3-toolbar-right { display: flex; gap: 8px; }
+  .d3-sort-btn {
+    padding: 5px 12px; border-radius: 6px; border: 1.5px solid var(--border);
+    background: var(--white); font-size: 0.78rem; color: var(--muted); cursor: pointer; font-family: inherit;
+  }
+  .d3-sort-btn.active { border-color: var(--sage); color: var(--sage); background: var(--sage-light); }
+  .d3-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .d3-card {
+    background: var(--white); border-radius: 10px; overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .d3-card-meta { padding: 12px 14px; }
+  .d3-card-title { font-size: 0.9rem; font-weight: 600; margin-bottom: 4px; }
+  .d3-card-desc { font-size: 0.78rem; color: var(--muted); margin-bottom: 10px; line-height: 1.4; }
+  .d3-print-meta {
+    background: var(--bg); border-radius: 6px; padding: 8px 10px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 10px;
+  }
+  .d3-print-row { font-size: 0.7rem; }
+  .d3-print-key { color: var(--muted); }
+  .d3-print-val { color: var(--text); font-weight: 500; }
+  .d3-card-footer { display: flex; align-items: center; justify-content: space-between; }
+  .d3-dl-count { font-size: 0.75rem; color: var(--muted); }
+
+  /* ────────────────────────────────────────────────
+     DIRECTION 4: SEARCH-CENTERED DISCOVERY
+  ──────────────────────────────────────────────── */
+  .d4-nav {
+    background: var(--white); border-bottom: 1px solid var(--border);
+    padding: 0 32px; display: flex; align-items: center; height: 52px; gap: 16px;
+  }
+  .d4-logo { font-size: 1rem; font-weight: 700; color: var(--sage); }
+  .d4-nav-right { margin-left: auto; display: flex; gap: 8px; }
+  .d4-hero {
+    background: linear-gradient(180deg, #e8f4ea 0%, var(--bg) 100%);
+    padding: 36px 32px 24px; text-align: center;
+  }
+  .d4-hero h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 6px; }
+  .d4-hero p { color: var(--muted); font-size: 0.875rem; margin-bottom: 20px; }
+  .d4-hero-search {
+    max-width: 560px; margin: 0 auto; position: relative;
+  }
+  .d4-hero-search input {
+    width: 100%; border: 2px solid var(--sage); border-radius: 10px;
+    padding: 12px 16px 12px 44px; font-size: 1rem;
+    background: var(--white); outline: none; font-family: inherit;
+    box-shadow: 0 4px 16px rgba(74,124,89,0.12);
+  }
+  .d4-hero-search-icon {
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    color: var(--sage); font-size: 1.1rem;
+  }
+  .d4-cats { display: flex; gap: 10px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
+  .d4-cat-tile {
+    background: var(--white); border: 1.5px solid var(--border); border-radius: 8px;
+    padding: 8px 16px; font-size: 0.8rem; font-weight: 500; cursor: pointer;
+    color: var(--text); display: flex; align-items: center; gap: 6px;
+  }
+  .d4-cat-tile:hover { border-color: var(--sage); color: var(--sage); background: var(--sage-light); }
+  .d4-body { background: var(--bg); padding: 20px 32px; }
+  .d4-section-hd { font-size: 0.8rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px; }
+  .d4-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .d4-card {
+    background: var(--white); border-radius: 10px; overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .d4-card-meta { padding: 10px 12px; }
+  .d4-card-title { font-size: 0.8rem; font-weight: 600; margin-bottom: 4px; }
+  .d4-card-sub { font-size: 0.7rem; color: var(--muted); display: flex; gap: 8px; }
+
+  /* ────────────────────────────────────────────────
+     DIRECTION 5: SIDEBAR EXPLORER (with persistent filters)
+  ──────────────────────────────────────────────── */
+  .d5-nav {
+    background: var(--white); border-bottom: 1px solid var(--border);
+    padding: 0 24px; display: flex; align-items: center; height: 52px; gap: 16px;
+  }
+  .d5-logo { font-size: 1rem; font-weight: 700; color: var(--sage); }
+  .d5-search {
+    flex: 1; max-width: 360px; position: relative;
+  }
+  .d5-search input {
+    width: 100%; border: 1.5px solid var(--border); border-radius: 7px;
+    padding: 6px 12px 6px 32px; font-size: 0.8rem;
+    background: var(--bg); outline: none; font-family: inherit;
+  }
+  .d5-search-icon { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 0.8rem; }
+  .d5-nav-right { margin-left: auto; display: flex; gap: 8px; }
+  .d5-layout { display: flex; background: var(--bg); min-height: 340px; }
+  .d5-sidebar {
+    width: 200px; flex-shrink: 0; background: var(--white);
+    border-right: 1px solid var(--border); padding: 16px;
+  }
+  .d5-sidebar-title { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 10px; }
+  .d5-sidebar-item {
+    padding: 6px 8px; border-radius: 6px; font-size: 0.8rem; cursor: pointer;
+    color: var(--muted); display: flex; align-items: center; justify-content: space-between;
+  }
+  .d5-sidebar-item.active { background: var(--sage-light); color: var(--sage); font-weight: 500; }
+  .d5-sidebar-count { font-size: 0.7rem; }
+  .d5-sidebar-divider { height: 1px; background: var(--border); margin: 10px 0; }
+  .d5-sidebar-check { display: flex; align-items: center; gap: 6px; padding: 4px 0; font-size: 0.78rem; color: var(--text); }
+  .d5-sidebar-check input { accent-color: var(--sage); }
+  .d5-main { flex: 1; padding: 16px 20px; }
+  .d5-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .d5-count { font-size: 0.8rem; color: var(--muted); }
+  .d5-sort { font-size: 0.78rem; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .d5-sort select { border: 1.5px solid var(--border); border-radius: 6px; padding: 3px 8px; font-size: 0.78rem; font-family: inherit; background: var(--white); }
+  .d5-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .d5-card {
+    background: var(--white); border-radius: 8px; overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .d5-card-meta { padding: 8px 10px; }
+  .d5-card-title { font-size: 0.8rem; font-weight: 600; margin-bottom: 3px; }
+  .d5-card-sub { font-size: 0.7rem; color: var(--muted); }
+
+  /* ────────────────────────────────────────────────
+     DIRECTION 6: CREATOR-BALANCED (upload-forward)
+  ──────────────────────────────────────────────── */
+  .d6-nav {
+    background: var(--white); border-bottom: 1px solid var(--border);
+    padding: 0 32px; display: flex; align-items: center; height: 56px; gap: 16px;
+  }
+  .d6-logo { font-size: 1.1rem; font-weight: 700; color: var(--sage); }
+  .d6-search { flex: 1; max-width: 420px; position: relative; }
+  .d6-search input {
+    width: 100%; border: 1.5px solid var(--border); border-radius: 8px;
+    padding: 7px 12px 7px 34px; font-size: 0.875rem;
+    background: var(--bg); outline: none; font-family: inherit;
+  }
+  .d6-search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--muted); }
+  .d6-nav-right { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+  .btn-upload {
+    padding: 7px 16px; border-radius: 7px; border: none;
+    background: var(--sage); color: #fff; font-size: 0.8rem; font-weight: 600;
+    cursor: pointer; font-family: inherit; display: flex; align-items: center; gap: 6px;
+  }
+  .d6-banner {
+    background: linear-gradient(135deg, var(--sage) 0%, var(--sage-dark) 100%);
+    padding: 16px 32px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .d6-banner-text h3 { color: #fff; font-size: 0.95rem; font-weight: 600; margin-bottom: 2px; }
+  .d6-banner-text p { color: rgba(255,255,255,0.75); font-size: 0.8rem; }
+  .d6-banner-btn {
+    padding: 8px 20px; border-radius: 7px; background: #fff;
+    color: var(--sage); font-size: 0.8rem; font-weight: 600; border: none; cursor: pointer; font-family: inherit;
+  }
+  .d6-body { background: var(--bg); padding: 20px 32px; }
+  .d6-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+  .d6-tab {
+    padding: 8px 16px; font-size: 0.8rem; font-weight: 500; cursor: pointer;
+    color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px;
+  }
+  .d6-tab.active { color: var(--sage); border-bottom-color: var(--sage); }
+  .d6-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .d6-card {
+    background: var(--white); border-radius: 10px; overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .d6-card-meta { padding: 10px 12px; }
+  .d6-card-title { font-size: 0.82rem; font-weight: 600; margin-bottom: 4px; }
+  .d6-card-sub { font-size: 0.7rem; color: var(--muted); display: flex; align-items: center; justify-content: space-between; }
+
+  /* ─── EVALUATION GUIDE ─── */
+  .eval-section {
+    max-width: 1400px; margin: 0 auto 64px; padding: 0 24px;
+  }
+  .eval-card {
+    background: #1e2a1e; border: 1px solid #2d3f2d; border-radius: 12px;
+    padding: 32px;
+  }
+  .eval-card h2 { color: #7dbb8a; font-size: 1.1rem; margin-bottom: 16px; }
+  .eval-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .eval-item h4 { color: #aaddaa; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; }
+  .eval-item p { color: #888; font-size: 0.8rem; line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<!-- SHOWCASE HEADER -->
+<div class="showcase-header">
+  <h1>3D Hub — Design Direction Showcase</h1>
+  <p>6 visual directions exploring layout, hierarchy, and interaction approach. Green palette applied throughout.</p>
+  <div class="direction-nav">
+    <a href="#d1">1. Minimal Gallery</a>
+    <a href="#d2">2. Editorial Featured</a>
+    <a href="#d3">3. Card Spotlight</a>
+    <a href="#d4">4. Search-Centered</a>
+    <a href="#d5">5. Sidebar Explorer</a>
+    <a href="#d6">6. Creator-Balanced</a>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════
+  DIRECTION 1: MINIMAL GALLERY
+══════════════════════════════════════ -->
+<div class="direction-section" id="d1">
+  <div class="direction-label">Direction 1</div>
+  <div class="direction-title">Minimal Gallery</div>
+  <div class="direction-desc">Pinterest-inspired. Thin nav, dominant photo grid, green only on accents and CTAs. Maximum focus on model photography. Clean, restrained, airy.</div>
+
+  <div class="mockup-frame">
+    <div class="browser-bar">
+      <div class="browser-dot red"></div>
+      <div class="browser-dot yellow"></div>
+      <div class="browser-dot green"></div>
+      <div class="browser-url">3dhub.app</div>
+    </div>
+
+    <!-- NAV -->
+    <div class="d1-nav">
+      <div class="d1-logo">3D Hub</div>
+      <div class="d1-search">
+        <span class="d1-search-icon">🔍</span>
+        <input type="text" placeholder="Search models, tags, creators…">
+      </div>
+      <div class="d1-nav-right">
+        <button class="btn-ghost">Log in</button>
+        <button class="btn-primary">Sign up</button>
+      </div>
+    </div>
+
+    <!-- BODY -->
+    <div class="d1-body">
+      <!-- Category pills -->
+      <div class="d1-cats">
+        <div class="d1-cat active">All</div>
+        <div class="d1-cat">Tools</div>
+        <div class="d1-cat">Home</div>
+        <div class="d1-cat">Gadgets</div>
+        <div class="d1-cat">Art</div>
+        <div class="d1-cat">Miniatures</div>
+        <div class="d1-cat">Functional</div>
+        <div class="d1-cat">Toys</div>
+      </div>
+
+      <!-- Grid -->
+      <div class="d1-grid">
+        <div class="d1-card">
+          <div class="photo-placeholder tall"></div>
+          <div class="d1-card-meta">
+            <div class="d1-card-title">Magnetic Tool Holder</div>
+            <div class="d1-card-sub">
+              <span>⬇ 2,341</span>
+              <span style="margin-left:auto"><span class="tag">workshop</span></span>
+            </div>
+          </div>
+        </div>
+        <div class="d1-card">
+          <div class="photo-placeholder tall" style="background: linear-gradient(135deg, #b8d4c8, #8fb8a8);"></div>
+          <div class="d1-card-meta">
+            <div class="d1-card-title">Cable Organizer Desk</div>
+            <div class="d1-card-sub">
+              <span>⬇ 1,892</span>
+              <span style="margin-left:auto"><span class="tag">home</span></span>
+            </div>
+          </div>
+        </div>
+        <div class="d1-card">
+          <div class="photo-placeholder tall" style="background: linear-gradient(135deg, #d4c8b8, #b8a898);"></div>
+          <div class="d1-card-meta">
+            <div class="d1-card-title">Raspberry Pi 5 Case</div>
+            <div class="d1-card-sub">
+              <span>⬇ 3,107</span>
+              <span style="margin-left:auto"><span class="tag">electronics</span></span>
+            </div>
+          </div>
+        </div>
+        <div class="d1-card">
+          <div class="photo-placeholder tall" style="background: linear-gradient(135deg, #c8d4d4, #a8b8c0);"></div>
+          <div class="d1-card-meta">
+            <div class="d1-card-title">Filament Spool Holder</div>
+            <div class="d1-card-sub">
+              <span>⬇ 987</span>
+              <span style="margin-left:auto"><span class="tag">3d printing</span></span>
+            </div>
+          </div>
+        </div>
+        <div class="d1-card">
+          <div class="photo-placeholder tall" style="background: linear-gradient(135deg, #d4c8d4, #b8a8c0);"></div>
+          <div class="d1-card-meta">
+            <div class="d1-card-title">Articulated Dragon</div>
+            <div class="d1-card-sub">
+              <span>⬇ 5,612</span>
+              <span style="margin-left:auto"><span class="tag">art</span></span>
+            </div>
+          </div>
+        </div>
+        <div class="d1-card">
+          <div class="photo-placeholder tall" style="background: linear-gradient(135deg, #c8d4c0, #a8c0a0);"></div>
+          <div class="d1-card-meta">
+            <div class="d1-card-title">Wall Planter Pot</div>
+            <div class="d1-card-sub">
+              <span>⬇ 1,204</span>
+              <span style="margin-left:auto"><span class="tag">garden</span></span>
+            </div>
+          </div>
+        </div>
+        <div class="d1-card">
+          <div class="photo-placeholder tall" style="background: linear-gradient(135deg, #d4d0c0, #c0bca8);"></div>
+          <div class="d1-card-meta">
+            <div class="d1-card-title">Hex Drawer Insert</div>
+            <div class="d1-card-sub">
+              <span>⬇ 743</span>
+              <span style="margin-left:auto"><span class="tag">storage</span></span>
+            </div>
+          </div>
+        </div>
+        <div class="d1-card">
+          <div class="photo-placeholder tall" style="background: linear-gradient(135deg, #c8c0d4, #a8a0c0);"></div>
+          <div class="d1-card-meta">
+            <div class="d1-card-title">Phone Stand Adjustable</div>
+            <div class="d1-card-sub">
+              <span>⬇ 2,089</span>
+              <span style="margin-left:auto"><span class="tag">desk</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════
+  DIRECTION 2: EDITORIAL FEATURED
+══════════════════════════════════════ -->
+<div class="direction-section" id="d2">
+  <div class="direction-label">Direction 2</div>
+  <div class="direction-title">Editorial Featured</div>
+  <div class="direction-desc">Underline-tab nav, prominent featured/trending models in a hero row, standard grid below. Content-editorial feel. Curated quality over raw grid.</div>
+
+  <div class="mockup-frame">
+    <div class="browser-bar">
+      <div class="browser-dot red"></div><div class="browser-dot yellow"></div><div class="browser-dot green"></div>
+      <div class="browser-url">3dhub.app</div>
+    </div>
+
+    <div class="d2-nav">
+      <div class="d2-logo">3D Hub</div>
+      <div class="d2-nav-links">
+        <div class="d2-nav-link active">Explore</div>
+        <div class="d2-nav-link">Categories</div>
+        <div class="d2-nav-link">Trending</div>
+        <div class="d2-nav-link">New</div>
+      </div>
+      <div class="d2-search">
+        <input type="text" placeholder="Search…">
+        <button class="btn-primary">Go</button>
+      </div>
+    </div>
+
+    <div class="d2-body">
+      <!-- Featured row -->
+      <div class="d2-featured">
+        <div class="d2-featured-card">
+          <div class="d2-featured-badge">
+            <span class="badge">⭐ Featured</span>
+            <div class="photo-placeholder featured"></div>
+          </div>
+          <div class="d2-featured-meta">
+            <div class="d2-featured-title">Parametric Wall Bracket System</div>
+            <div class="d2-featured-desc">A fully modular wall bracket system for workshop organization. Prints in PLA, no supports needed.</div>
+            <div class="d2-featured-footer">
+              <span style="font-size:0.75rem;color:var(--muted)">⬇ 4,231 downloads</span>
+              <button class="btn-primary" style="font-size:0.78rem;padding:5px 12px">Download</button>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div style="font-size:0.75rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em">🔥 Trending This Week</div>
+          <div class="d2-card" style="display:flex;gap:0;overflow:hidden;border-radius:8px">
+            <div class="photo-placeholder medium" style="width:120px;flex-shrink:0;height:auto;min-height:90px;background:linear-gradient(135deg,#b8d4c8,#8fb8a8)"></div>
+            <div style="padding:10px 12px;flex:1">
+              <div class="d2-card-title">Articulated Dragon — Full Print</div>
+              <div class="d2-card-sub" style="margin-top:3px">⬇ 5,612 · <span class="tag" style="margin-left:4px">art</span></div>
+            </div>
+          </div>
+          <div class="d2-card" style="display:flex;gap:0;overflow:hidden;border-radius:8px">
+            <div class="photo-placeholder medium" style="width:120px;flex-shrink:0;height:auto;min-height:90px;background:linear-gradient(135deg,#d4c8b8,#b8a898)"></div>
+            <div style="padding:10px 12px;flex:1">
+              <div class="d2-card-title">Raspberry Pi 5 Case V2</div>
+              <div class="d2-card-sub" style="margin-top:3px">⬇ 3,107 · <span class="tag" style="margin-left:4px">electronics</span></div>
+            </div>
+          </div>
+          <div class="d2-card" style="display:flex;gap:0;overflow:hidden;border-radius:8px">
+            <div class="photo-placeholder medium" style="width:120px;flex-shrink:0;height:auto;min-height:90px;background:linear-gradient(135deg,#c8c0d4,#a8a0c0)"></div>
+            <div style="padding:10px 12px;flex:1">
+              <div class="d2-card-title">Magnetic Tool Holder Set</div>
+              <div class="d2-card-sub" style="margin-top:3px">⬇ 2,341 · <span class="tag" style="margin-left:4px">workshop</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grid -->
+      <div class="d2-section-label">All Models</div>
+      <div class="d2-grid">
+        <div class="d2-card"><div class="photo-placeholder short" style="background:linear-gradient(135deg,#c8d4c0,#a8c0a0)"></div><div class="d2-card-meta"><div class="d2-card-title">Wall Planter</div><div class="d2-card-sub">⬇ 1,204</div></div></div>
+        <div class="d2-card"><div class="photo-placeholder short" style="background:linear-gradient(135deg,#d4d0c0,#c0bca8)"></div><div class="d2-card-meta"><div class="d2-card-title">Hex Drawer Insert</div><div class="d2-card-sub">⬇ 743</div></div></div>
+        <div class="d2-card"><div class="photo-placeholder short" style="background:linear-gradient(135deg,#c8d4d4,#a8b8c0)"></div><div class="d2-card-meta"><div class="d2-card-title">Filament Holder</div><div class="d2-card-sub">⬇ 987</div></div></div>
+        <div class="d2-card"><div class="photo-placeholder short" style="background:linear-gradient(135deg,#d4c8d4,#b8a8c0)"></div><div class="d2-card-meta"><div class="d2-card-title">Cable Organizer</div><div class="d2-card-sub">⬇ 1,892</div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════
+  DIRECTION 3: CARD SPOTLIGHT
+══════════════════════════════════════ -->
+<div class="direction-section" id="d3">
+  <div class="direction-label">Direction 3</div>
+  <div class="direction-title">Card Spotlight</div>
+  <div class="direction-desc">Green header nav. 3-column grid with richer cards — print metadata visible on the card without clicking through. Reduces the need to open each model page to evaluate. Consumer confidence built at the card level.</div>
+
+  <div class="mockup-frame">
+    <div class="browser-bar">
+      <div class="browser-dot red"></div><div class="browser-dot yellow"></div><div class="browser-dot green"></div>
+      <div class="browser-url">3dhub.app</div>
+    </div>
+
+    <div class="d3-nav">
+      <div class="d3-logo">3D Hub</div>
+      <div class="d3-search">
+        <input type="text" placeholder="Search models…">
+      </div>
+      <div class="d3-nav-right">
+        <button class="btn-white">Log in</button>
+        <button class="btn-white-solid">Sign up</button>
+      </div>
+    </div>
+    <div class="d3-subheader">
+      <div class="d3-sub-link active">All Models</div>
+      <div class="d3-sub-link">Tools</div>
+      <div class="d3-sub-link">Home</div>
+      <div class="d3-sub-link">Electronics</div>
+      <div class="d3-sub-link">Art</div>
+      <div class="d3-sub-link">Miniatures</div>
+    </div>
+
+    <div class="d3-body">
+      <div class="d3-toolbar">
+        <div class="d3-toolbar-left">214 models found</div>
+        <div class="d3-toolbar-right">
+          <button class="d3-sort-btn active">Most Downloaded</button>
+          <button class="d3-sort-btn">Newest</button>
+          <button class="d3-sort-btn">A–Z</button>
+        </div>
+      </div>
+
+      <div class="d3-grid">
+        <div class="d3-card">
+          <div class="photo-placeholder tall"></div>
+          <div class="d3-card-meta">
+            <div class="d3-card-title">Magnetic Tool Holder</div>
+            <div class="d3-card-desc">Wall-mounted magnetic holder for workshop tools. Neodymium magnet insert required.</div>
+            <div class="d3-print-meta">
+              <div class="d3-print-row"><span class="d3-print-key">Layer height </span><span class="d3-print-val">0.2mm</span></div>
+              <div class="d3-print-row"><span class="d3-print-key">Infill </span><span class="d3-print-val">25%</span></div>
+              <div class="d3-print-row"><span class="d3-print-key">Supports </span><span class="d3-print-val">No</span></div>
+              <div class="d3-print-row"><span class="d3-print-key">Filament </span><span class="d3-print-val">PLA</span></div>
+            </div>
+            <div class="d3-card-footer">
+              <div class="d3-dl-count">⬇ 2,341</div>
+              <button class="btn-primary" style="font-size:0.75rem;padding:5px 12px">Download</button>
+            </div>
+          </div>
+        </div>
+        <div class="d3-card">
+          <div class="photo-placeholder tall" style="background:linear-gradient(135deg,#b8d4c8,#8fb8a8)"></div>
+          <div class="d3-card-meta">
+            <div class="d3-card-title">Raspberry Pi 5 Case</div>
+            <div class="d3-card-desc">Slim vented case with access to all ports and GPIO header. Tested on RPi 5 Rev 1.1.</div>
+            <div class="d3-print-meta">
+              <div class="d3-print-row"><span class="d3-print-key">Layer height </span><span class="d3-print-val">0.15mm</span></div>
+              <div class="d3-print-row"><span class="d3-print-key">Infill </span><span class="d3-print-val">20%</span></div>
+              <div class="d3-print-row"><span class="d3-print-key">Supports </span><span class="d3-print-val">Yes</span></div>
+              <div class="d3-print-row"><span class="d3-print-key">Filament </span><span class="d3-print-val">PETG</span></div>
+            </div>
+            <div class="d3-card-footer">
+              <div class="d3-dl-count">⬇ 3,107</div>
+              <button class="btn-primary" style="font-size:0.75rem;padding:5px 12px">Download</button>
+            </div>
+          </div>
+        </div>
+        <div class="d3-card">
+          <div class="photo-placeholder tall" style="background:linear-gradient(135deg,#d4c8b8,#b8a898)"></div>
+          <div class="d3-card-meta">
+            <div class="d3-card-title">Articulated Dragon</div>
+            <div class="d3-card-desc">Print-in-place articulated dragon. No assembly required — print flat and flex immediately.</div>
+            <div class="d3-print-meta">
+              <div class="d3-print-row"><span class="d3-print-key">Layer height </span><span class="d3-print-val">0.2mm</span></div>
+              <div class="d3-print-row"><span class="d3-print-key">Infill </span><span class="d3-print-val">15%</span></div>
+              <div class="d3-print-row"><span class="d3-print-key">Supports </span><span class="d3-print-val">No</span></div>
+              <div class="d3-print-row"><span class="d3-print-key">Filament </span><span class="d3-print-val">PLA</span></div>
+            </div>
+            <div class="d3-card-footer">
+              <div class="d3-dl-count">⬇ 5,612</div>
+              <button class="btn-primary" style="font-size:0.75rem;padding:5px 12px">Download</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════
+  DIRECTION 4: SEARCH-CENTERED DISCOVERY
+══════════════════════════════════════ -->
+<div class="direction-section" id="d4">
+  <div class="direction-label">Direction 4</div>
+  <div class="direction-title">Search-Centered Discovery</div>
+  <div class="direction-desc">Hero search bar front and center on arrival. Category tiles for visual navigation. Grid below is secondary. Optimized for users who arrive via search engine and want to refine quickly.</div>
+
+  <div class="mockup-frame">
+    <div class="browser-bar">
+      <div class="browser-dot red"></div><div class="browser-dot yellow"></div><div class="browser-dot green"></div>
+      <div class="browser-url">3dhub.app</div>
+    </div>
+
+    <div class="d4-nav">
+      <div class="d4-logo">3D Hub</div>
+      <div class="d4-nav-right">
+        <button class="btn-ghost">Log in</button>
+        <button class="btn-primary">Sign up</button>
+      </div>
+    </div>
+
+    <div class="d4-hero">
+      <h2>Find models that actually print</h2>
+      <p>Every model has a real printed photo. Browse with confidence.</p>
+      <div class="d4-hero-search">
+        <span class="d4-hero-search-icon">🔍</span>
+        <input type="text" placeholder="cable organizer, tool holder, dragon…">
+      </div>
+      <div class="d4-cats">
+        <div class="d4-cat-tile">🔧 Tools</div>
+        <div class="d4-cat-tile">🏠 Home</div>
+        <div class="d4-cat-tile">🎮 Gadgets</div>
+        <div class="d4-cat-tile">🐉 Art & Figures</div>
+        <div class="d4-cat-tile">🌱 Garden</div>
+        <div class="d4-cat-tile">🖨️ 3D Printing</div>
+      </div>
+    </div>
+
+    <div class="d4-body">
+      <div class="d4-section-hd">Most Downloaded</div>
+      <div class="d4-grid">
+        <div class="d4-card"><div class="photo-placeholder tall"></div><div class="d4-card-meta"><div class="d4-card-title">Articulated Dragon</div><div class="d4-card-sub"><span>⬇ 5,612</span><span class="tag">art</span></div></div></div>
+        <div class="d4-card"><div class="photo-placeholder tall" style="background:linear-gradient(135deg,#b8d4c8,#8fb8a8)"></div><div class="d4-card-meta"><div class="d4-card-title">RPi 5 Case</div><div class="d4-card-sub"><span>⬇ 3,107</span><span class="tag">electronics</span></div></div></div>
+        <div class="d4-card"><div class="photo-placeholder tall" style="background:linear-gradient(135deg,#d4c8b8,#b8a898)"></div><div class="d4-card-meta"><div class="d4-card-title">Tool Holder Magnetic</div><div class="d4-card-sub"><span>⬇ 2,341</span><span class="tag">workshop</span></div></div></div>
+        <div class="d4-card"><div class="photo-placeholder tall" style="background:linear-gradient(135deg,#c8c0d4,#a8a0c0)"></div><div class="d4-card-meta"><div class="d4-card-title">Cable Organizer</div><div class="d4-card-sub"><span>⬇ 1,892</span><span class="tag">home</span></div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════
+  DIRECTION 5: SIDEBAR EXPLORER
+══════════════════════════════════════ -->
+<div class="direction-section" id="d5">
+  <div class="direction-label">Direction 5</div>
+  <div class="direction-title">Sidebar Explorer</div>
+  <div class="direction-desc">Persistent left sidebar with category filters, support filters, and filament filters always visible. Power-user oriented — for makers who know exactly what they're looking for. Denser, more functional.</div>
+
+  <div class="mockup-frame">
+    <div class="browser-bar">
+      <div class="browser-dot red"></div><div class="browser-dot yellow"></div><div class="browser-dot green"></div>
+      <div class="browser-url">3dhub.app</div>
+    </div>
+
+    <div class="d5-nav">
+      <div class="d5-logo">3D Hub</div>
+      <div class="d5-search">
+        <span class="d5-search-icon">🔍</span>
+        <input type="text" placeholder="Search…">
+      </div>
+      <div class="d5-nav-right">
+        <button class="btn-ghost" style="font-size:0.78rem;padding:5px 12px">Log in</button>
+        <button class="btn-primary" style="font-size:0.78rem;padding:5px 12px">Sign up</button>
+      </div>
+    </div>
+
+    <div class="d5-layout">
+      <div class="d5-sidebar">
+        <div class="d5-sidebar-title">Category</div>
+        <div class="d5-sidebar-item active">All Models <span class="d5-sidebar-count">214</span></div>
+        <div class="d5-sidebar-item">Tools <span class="d5-sidebar-count">38</span></div>
+        <div class="d5-sidebar-item">Home <span class="d5-sidebar-count">61</span></div>
+        <div class="d5-sidebar-item">Electronics <span class="d5-sidebar-count">27</span></div>
+        <div class="d5-sidebar-item">Art & Figures <span class="d5-sidebar-count">44</span></div>
+        <div class="d5-sidebar-item">Miniatures <span class="d5-sidebar-count">19</span></div>
+        <div class="d5-sidebar-item">Garden <span class="d5-sidebar-count">12</span></div>
+
+        <div class="d5-sidebar-divider"></div>
+        <div class="d5-sidebar-title">Supports</div>
+        <label class="d5-sidebar-check"><input type="checkbox" checked> No supports needed</label>
+        <label class="d5-sidebar-check"><input type="checkbox"> Supports required</label>
+
+        <div class="d5-sidebar-divider"></div>
+        <div class="d5-sidebar-title">Filament</div>
+        <label class="d5-sidebar-check"><input type="checkbox" checked> PLA</label>
+        <label class="d5-sidebar-check"><input type="checkbox"> PETG</label>
+        <label class="d5-sidebar-check"><input type="checkbox"> ABS</label>
+        <label class="d5-sidebar-check"><input type="checkbox"> TPU</label>
+      </div>
+
+      <div class="d5-main">
+        <div class="d5-toolbar">
+          <div class="d5-count">214 models</div>
+          <div class="d5-sort">
+            Sort by
+            <select><option>Most Downloaded</option><option>Newest</option></select>
+          </div>
+        </div>
+        <div class="d5-grid">
+          <div class="d5-card"><div class="photo-placeholder medium"></div><div class="d5-card-meta"><div class="d5-card-title">Magnetic Tool Holder</div><div class="d5-card-sub">⬇ 2,341 · PLA · No supports</div></div></div>
+          <div class="d5-card"><div class="photo-placeholder medium" style="background:linear-gradient(135deg,#b8d4c8,#8fb8a8)"></div><div class="d5-card-meta"><div class="d5-card-title">Cable Organizer Desk</div><div class="d5-card-sub">⬇ 1,892 · PLA · No supports</div></div></div>
+          <div class="d5-card"><div class="photo-placeholder medium" style="background:linear-gradient(135deg,#d4c8b8,#b8a898)"></div><div class="d5-card-meta"><div class="d5-card-title">Articulated Dragon</div><div class="d5-card-sub">⬇ 5,612 · PLA · No supports</div></div></div>
+          <div class="d5-card"><div class="photo-placeholder medium" style="background:linear-gradient(135deg,#c8d4d4,#a8b8c0)"></div><div class="d5-card-meta"><div class="d5-card-title">Filament Spool Holder</div><div class="d5-card-sub">⬇ 987 · PETG · No supports</div></div></div>
+          <div class="d5-card"><div class="photo-placeholder medium" style="background:linear-gradient(135deg,#c8c0d4,#a8a0c0)"></div><div class="d5-card-meta"><div class="d5-card-title">Wall Planter Pot</div><div class="d5-card-sub">⬇ 1,204 · PLA · No supports</div></div></div>
+          <div class="d5-card"><div class="photo-placeholder medium" style="background:linear-gradient(135deg,#d4d0c0,#c0bca8)"></div><div class="d5-card-meta"><div class="d5-card-title">Hex Drawer Insert</div><div class="d5-card-sub">⬇ 743 · PLA · No supports</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════
+  DIRECTION 6: CREATOR-BALANCED
+══════════════════════════════════════ -->
+<div class="direction-section" id="d6">
+  <div class="direction-label">Direction 6</div>
+  <div class="direction-title">Creator-Balanced</div>
+  <div class="direction-desc">Upload CTA prominent in header and reinforced via a green banner. Tabs to switch between browsing and the user's own models. Balances consumer discovery with creator motivation and visibility.</div>
+
+  <div class="mockup-frame">
+    <div class="browser-bar">
+      <div class="browser-dot red"></div><div class="browser-dot yellow"></div><div class="browser-dot green"></div>
+      <div class="browser-url">3dhub.app</div>
+    </div>
+
+    <div class="d6-nav">
+      <div class="d6-logo">3D Hub</div>
+      <div class="d6-search">
+        <span class="d6-search-icon" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted)">🔍</span>
+        <input type="text" placeholder="Search models…">
+      </div>
+      <div class="d6-nav-right">
+        <button class="btn-ghost">Log in</button>
+        <button class="btn-upload">+ Upload Model</button>
+      </div>
+    </div>
+
+    <div class="d6-banner">
+      <div class="d6-banner-text">
+        <h3>Share your prints with the community</h3>
+        <p>Every model needs a real printed photo — no renders, no guessing.</p>
+      </div>
+      <button class="d6-banner-btn">Upload your first model →</button>
+    </div>
+
+    <div class="d6-body">
+      <div class="d6-tabs">
+        <div class="d6-tab active">🔥 Trending</div>
+        <div class="d6-tab">🆕 New</div>
+        <div class="d6-tab">🏷️ By Category</div>
+        <div class="d6-tab">📚 My Library</div>
+      </div>
+
+      <div class="d6-grid">
+        <div class="d6-card"><div class="photo-placeholder tall"></div><div class="d6-card-meta"><div class="d6-card-title">Articulated Dragon</div><div class="d6-card-sub"><span>⬇ 5,612</span><span class="tag">art</span></div></div></div>
+        <div class="d6-card"><div class="photo-placeholder tall" style="background:linear-gradient(135deg,#b8d4c8,#8fb8a8)"></div><div class="d6-card-meta"><div class="d6-card-title">RPi 5 Case</div><div class="d6-card-sub"><span>⬇ 3,107</span><span class="tag">electronics</span></div></div></div>
+        <div class="d6-card"><div class="photo-placeholder tall" style="background:linear-gradient(135deg,#d4c8b8,#b8a898)"></div><div class="d6-card-meta"><div class="d6-card-title">Tool Holder Magnetic</div><div class="d6-card-sub"><span>⬇ 2,341</span><span class="tag">workshop</span></div></div></div>
+        <div class="d6-card"><div class="photo-placeholder tall" style="background:linear-gradient(135deg,#c8c0d4,#a8a0c0)"></div><div class="d6-card-meta"><div class="d6-card-title">Cable Organizer</div><div class="d6-card-sub"><span>⬇ 1,892</span><span class="tag">home</span></div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- EVALUATION GUIDE -->
+<div class="eval-section">
+  <div class="eval-card">
+    <h2>Evaluation Guide — What to look for</h2>
+    <div class="eval-grid">
+      <div class="eval-item">
+        <h4>Layout & Hierarchy</h4>
+        <p>Which card size and grid density feels right? D1 & D4 maximize browsability. D3 puts more info on each card. D5 suits power users with filters.</p>
+      </div>
+      <div class="eval-item">
+        <h4>Nav & Green Usage</h4>
+        <p>D1/D2/D4/D6: white nav, green as accent only. D3: full green header — stronger brand presence. D6: green banner draws attention to creator CTA. Which feels right?</p>
+      </div>
+      <div class="eval-item">
+        <h4>Metadata Visibility</h4>
+        <p>D3 shows print metadata (layer height, infill, supports, filament) directly on cards. Others show it on the model page only. Does D3's approach help consumers evaluate faster?</p>
+      </div>
+      <div class="eval-item">
+        <h4>Featured / Editorial</h4>
+        <p>D2 has a prominent featured hero section. Others go straight to grid. Does editorial curation add value for cold-start (50 models), or does a clean grid work better?</p>
+      </div>
+      <div class="eval-item">
+        <h4>Creator Emphasis</h4>
+        <p>D6 puts the Upload CTA front-and-center with a banner. Others keep it in the nav. How prominent should creator onboarding be for V1?</p>
+      </div>
+      <div class="eval-item">
+        <h4>Search Placement</h4>
+        <p>D4 makes search the homepage hero. Others put it in the nav. Given most users arrive via SEO on model pages, how important is homepage search prominence?</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
