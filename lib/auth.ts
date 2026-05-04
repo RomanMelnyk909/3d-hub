@@ -4,6 +4,10 @@ import bcrypt from 'bcryptjs'
 import { getUserByEmail } from '@/lib/db/users'
 import { authConfig } from './auth.config'
 
+// Constant-time guard: always run bcrypt even when user is not found,
+// preventing email enumeration via response-time differences.
+const DUMMY_HASH = bcrypt.hashSync('__placeholder__', 10)
+
 declare module 'next-auth' {
   interface Session {
     user: {
@@ -35,14 +39,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null
 
+        // synchronous — better-sqlite3
         const user = getUserByEmail(credentials.email as string)
-        if (!user) return null
+        const hash = user?.passwordHash ?? DUMMY_HASH
+        const isValid = await bcrypt.compare(credentials.password as string, hash)
 
-        const isValid = await bcrypt.compare(
-          credentials.password as string,
-          user.passwordHash
-        )
-        if (!isValid) return null
+        if (!user || !isValid) return null
 
         return {
           id: user.id,
@@ -62,9 +64,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return token
     },
     session({ session, token }) {
-      session.user.userId = token.userId as string
-      session.user.username = token.username as string
-      return session
+      return {
+        ...session,
+        user: {
+          email: session.user.email,
+          userId: token.userId as string,
+          username: token.username as string,
+        },
+      }
     },
   },
 })

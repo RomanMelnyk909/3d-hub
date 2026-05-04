@@ -1,6 +1,6 @@
 # Story 1.1: Project Setup & Design System Foundation
 
-Status: review
+Status: done
 
 ## Story
 
@@ -102,6 +102,23 @@ so that all subsequent stories can build on a consistent visual and technical fo
 - [x] Scaffold empty directory structure
   - [x] Create empty placeholder files to establish directory structure: `components/model/.gitkeep`, `components/upload/.gitkeep`, `components/search/.gitkeep`, `components/auth/.gitkeep`, `lib/db/.gitkeep`, `lib/storage/.gitkeep`, `hooks/.gitkeep`, `stores/.gitkeep`, `types/.gitkeep`
   - [x] Note: Only `types/api.ts` and `lib/constants.ts` have real content in this story; rest are scaffolded for Story 1.2+
+
+### Review Findings (2026-05-04)
+
+- [x] [Review][Patch] Duplicate `NEXTAUTH_URL` key in `.env.example` [`.env.example`] — FALSE POSITIVE: no duplicate found in actual file; reviewer hallucinated from diff context
+- [x] [Review][Patch] `shadcn` CLI listed in `dependencies` instead of `devDependencies` [`package.json`] — moved to devDependencies
+- [x] [Review][Patch] Missing `--color-border: #E2EBE4` design token from `@theme` block [`app/globals.css`] — added to `@theme` block
+- [x] [Review][Patch] Typography scale `@theme` tokens define font-size only; font-weight values (700, 600, 500…) missing [`app/globals.css`] — added `--font-weight-{h1,h2,h3,body,small,label}` tokens to `@theme` block
+- [x] [Review][Defer] `@types/*` packages in `dependencies` instead of `devDependencies` [`package.json`] — deferred, pre-existing; story spec directed `npm i` (not `npm i -D`) so this matches the spec as written
+- [x] [Review][Defer] `next-auth@^5.0.0-beta.31` in production `dependencies` [`package.json`] — deferred, pre-existing; project-level decision established before this story
+- [x] [Review][Defer] Mobile menu has no focus trap or Escape key handler [`components/layout/Navbar.tsx`] — deferred, pre-existing; story explicitly scoped Navbar as "simple toggle state for now"
+- [x] [Review][Defer] Mobile menu stays open when viewport resizes to ≥640px [`components/layout/Navbar.tsx`] — deferred, pre-existing; polish item outside simple-toggle scope
+- [x] [Review][Defer] Mobile menu not closed on browser back/forward navigation [`components/layout/Navbar.tsx`] — deferred, pre-existing; polish item, popstate not handled
+- [x] [Review][Defer] Footer copyright year frozen at build/render time [`components/layout/Footer.tsx`] — deferred, pre-existing; acceptable for v1 local deployment
+- [x] [Review][Defer] `ALLOWED_MODEL_EXTENSIONS` case-sensitive; `.STL`/`.3MF` will not match [`lib/constants.ts`] — deferred, pre-existing; normalization (`.toLowerCase()`) is the upload handler's responsibility, not the constant definition
+- [x] [Review][Defer] `DATABASE_PATH`/`UPLOAD_DIR` relative paths are CWD-dependent [`.env.example`] — deferred, pre-existing; acceptable for local-only v1 deployment
+- [x] [Review][Defer] `NEXTAUTH_SECRET=your-secret-here` placeholder accepted by NextAuth without error [`.env.example`] — deferred, pre-existing; developer setup responsibility
+- [x] [Review][Defer] `lang="en"` hardcoded on `<html>` with no i18n provision [`app/layout.tsx`] — deferred, pre-existing; v1 is English only per project scope
 
 ## Dev Notes
 

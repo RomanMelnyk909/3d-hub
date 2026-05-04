@@ -1,6 +1,6 @@
 # Story 1.2: Database Schema & User Data Layer
 
-Status: review
+Status: done
 
 ## Story
 
@@ -63,6 +63,18 @@ so that user accounts can be stored and retrieved by the authentication stories 
   - [x] Production build: successful (`npm run build`)
   - [x] ESLint: 0 errors, 0 warnings (`npm run lint`)
   - [x] DB file will be created on first import of `lib/db/index.ts` (triggered by Story 1.3+ API routes)
+
+### Review Findings (2026-05-04)
+
+- [x] [Review][Patch] Email not normalized to lowercase in `createUser`/`getUserByEmail`/`getUserByUsername` [`lib/db/users.ts`] — added `.toLowerCase()` in `createUser` (normalizes before INSERT) and `getUserByEmail` (normalizes before SELECT)
+- [x] [Review][Patch] `PublicUser` manually duplicates all `User` fields instead of `type PublicUser = Omit<User, 'passwordHash'>` [`types/user.ts`] — converted to `type PublicUser = Omit<User, 'passwordHash'>`
+- [x] [Review][Defer] Schema re-executed on every connection — intentional `IF NOT EXISTS` design for v1; address migration strategy before adding non-idempotent ALTER TABLE statements
+- [x] [Review][Defer] `createUser` doesn't surface UNIQUE constraint violations as typed errors — Story 1.4 registration route's responsibility to catch `SqliteError` and return a typed conflict response
+- [x] [Review][Defer] `path.resolve(process.cwd(), dbPath)` CWD-dependency — pre-existing; already in deferred-work.md; acceptable for local/VPS targets
+- [x] [Review][Defer] No `toPublicUser` helper co-located with data layer — Story 1.4 to add conversion utility when first API route returns user data
+- [x] [Review][Defer] `SELECT *` with `as DbUserRow` unsafe cast — low risk while schema is fully controlled; use explicit column list if schema complexity grows
+- [x] [Review][Defer] Module-scope DB singleton executes at import time — acceptable for local/VPS; revisit before serverless or Docker deployment
+- [x] [Review][Defer] `token.userId as string` cast without null guard in session callback — Story 1.3 scope item; not introduced by this story
 
 ## Dev Notes
 

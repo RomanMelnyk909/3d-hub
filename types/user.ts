@@ -7,12 +7,7 @@ export interface User {
 }
 
 /** Safe for API responses — passwordHash excluded */
-export interface PublicUser {
-  id: string
-  email: string
-  username: string
-  createdAt: string
-}
+export type PublicUser = Omit<User, 'passwordHash'>
 
 /** Stored in NextAuth JWT — minimal, no sensitive fields */
 export interface SessionUser {

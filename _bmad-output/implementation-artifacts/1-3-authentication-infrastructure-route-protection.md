@@ -1,6 +1,6 @@
 # Story 1.3: Authentication Infrastructure & Route Protection
 
-Status: review
+Status: done
 
 ## Story
 
@@ -53,6 +53,16 @@ so that sessions are created securely on login and unauthorized access to protec
   - [x] TypeScript compile: 0 errors (`npx tsc --noEmit`)
   - [x] Production build: successful (`npm run build`)
   - [x] ESLint: 0 errors, 0 warnings (`npm run lint`)
+
+### Review Findings (2026-05-04)
+
+- [x] [Review][Patch] `session` callback mutates pre-populated `session.user` instead of constructing it — fixed: callback now returns `{ ...session, user: { email, userId, username } }`, eliminating `session.user.id` leak from `token.sub` [`lib/auth.ts`]
+- [x] [Review][Patch] Timing oracle in `authorize` — fixed: module-level `DUMMY_HASH = bcrypt.hashSync('__placeholder__', 10)` used via `user?.passwordHash ?? DUMMY_HASH`; bcrypt.compare always runs regardless of whether user exists [`lib/auth.ts`]
+- [x] [Review][Defer] `getUserByEmail` called without `await` in `async authorize` — correct today with synchronous better-sqlite3; fragile if function is ever made async — add JSDoc comment clarifying sync nature
+- [x] [Review][Defer] `AUTH_SECRET` vs `NEXTAUTH_SECRET` env var — beta.31 supports `NEXTAUTH_SECRET`; verify correct name when upgrading to next-auth GA
+- [x] [Review][Defer] `Session.user` TypeScript augmentation intersects rather than replaces base NextAuth fields (`name`, `image` remain type-accessible) — known NextAuth declaration-merging limitation; address in type-hardening pass
+- [x] [Review][Defer] `authorized` callback returns HTML redirect (302) for unauthenticated API requests — intentional per AC2; revisit when non-browser API clients exist (Story 2.2+)
+- [x] [Review][Defer] Cold-start SQLite write-lock / WAL pragma has no error handling — pre-existing from story 1.2 scope; already tracked in deferred-work.md
 
 ## Dev Notes
 

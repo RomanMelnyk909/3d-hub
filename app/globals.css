@@ -13,6 +13,7 @@
   --color-text-muted: #6B7280;
   --color-error: #DC2626;
   --color-warning: #D97706;
+  --color-border: #E2EBE4;
 
   --font-size-h1: 2.25rem;
   --font-size-h2: 1.5rem;
@@ -20,6 +21,13 @@
   --font-size-body: 1rem;
   --font-size-small: 0.875rem;
   --font-size-label: 0.75rem;
+
+  --font-weight-h1: 700;
+  --font-weight-h2: 600;
+  --font-weight-h3: 600;
+  --font-weight-body: 400;
+  --font-weight-small: 400;
+  --font-weight-label: 500;
 }
 
 /* Shadcn variable mappings — reference :root CSS variables */

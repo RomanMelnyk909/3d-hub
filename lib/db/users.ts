@@ -24,17 +24,18 @@ export function createUser(
   username: string,
   passwordHash: string
 ): User {
+  const normalizedEmail = email.toLowerCase()
   const id = crypto.randomUUID()
   const createdAt = Math.floor(Date.now() / 1000)
 
   db.prepare(
     `INSERT INTO users (id, email, username, password_hash, created_at)
      VALUES (?, ?, ?, ?, ?)`
-  ).run(id, email, username, passwordHash, createdAt)
+  ).run(id, normalizedEmail, username, passwordHash, createdAt)
 
   return {
     id,
-    email,
+    email: normalizedEmail,
     username,
     passwordHash,
     createdAt: new Date(createdAt * 1000).toISOString(),
@@ -44,7 +45,7 @@ export function createUser(
 export function getUserByEmail(email: string): User | null {
   const row = db
     .prepare('SELECT * FROM users WHERE email = ?')
-    .get(email) as DbUserRow | undefined
+    .get(email.toLowerCase()) as DbUserRow | undefined
   return row ? mapRowToUser(row) : null
 }
 
