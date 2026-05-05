@@ -58,7 +58,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     ...authConfig.callbacks,
     jwt({ token, user }) {
       if (user) {
-        token.userId = user.id as string
+        token.userId = (user.id ?? '') as string
         token.username = user.username
       }
       return token
@@ -68,8 +68,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         ...session,
         user: {
           email: session.user.email,
-          userId: token.userId as string,
-          username: token.username as string,
+          userId: (token.userId ?? '') as string,
+          username: (token.username ?? '') as string,
         },
       }
     },

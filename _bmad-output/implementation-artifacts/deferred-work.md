@@ -28,3 +28,16 @@
 - `AUTH_SECRET` vs `NEXTAUTH_SECRET` env var name — `next-auth@5.0.0-beta.31` supports `NEXTAUTH_SECRET`; verify the correct name and update `.env.example` and `.env.local` when upgrading to next-auth GA (v5 stable reads `AUTH_SECRET` by default)
 - `Session.user` TypeScript augmentation merges with rather than replaces the base NextAuth `{ name?, email?, image? }` type — `session.user.name` and `session.user.image` remain type-valid (both `undefined` at runtime); fix in a type-hardening pass using `Omit` or an explicit re-declaration that drops the base fields
 - `authorized` callback in `lib/auth.config.ts` returns an HTML 302 redirect to `/login` for unauthenticated API requests — intentional per AC2 which targets browser navigation; if non-browser API clients are added (Story 2.2+), add a content-type check and return `Response.json({ error: 'Unauthorized' }, { status: 401 })` for `application/json` requests
+
+## Deferred from: code review of 1-4-user-registration (2026-05-05)
+
+- No rate limiting on `POST /api/auth/register` — endpoint enables email enumeration via 409 responses and bcrypt CPU exhaustion under parallel load; address with a rate-limiting middleware or edge-function guard before production launch
+- Check-then-insert race condition for email/username uniqueness — no database transaction wraps the lookup + insert; SQLite UNIQUE constraint is the actual guard (throws, caught as 500); story explicitly accepts this as an extremely rare edge case; revisit with a wrapping transaction if the DB layer moves to PostgreSQL
+
+## Deferred from: code review of 1-5-user-login-session-persistence (2026-05-05)
+
+- Empty-string `userId` guard (`?? ''`) in `lib/auth.ts` creates a phantom session risk — if `user.id` or `token.userId` is ever null/undefined, a session with blank userId is issued rather than rejecting the auth; this is the intended minimal fix per the deferred-work note from Story 1.2; proper fix is narrowing the NextAuth `User.id` type to non-nullable or adding an explicit null return in the jwt callback
+- Mobile drawer has no focus trap (`NavbarActions.tsx`) — keyboard users can tab into content behind the open drawer; a full WCAG 2.1 §2.1.2 compliant implementation would require a focus trap; story scope was limited to the Escape key handler
+- `setState('idle')` before `router.push` in `LoginForm.tsx` allows a sub-frame window where the submit button re-enables — negligible in practice due to React batching; revisit if UX testing reveals a perceived double-submit issue
+- `signIn` CredentialsSignin error code not server-side logged — error is intentionally collapsed to a generic message to prevent email enumeration; structured logging (e.g., Pino) deferred to V2 per architecture decisions
+- Derived username collision loop runs only once in `app/api/auth/register/route.ts` — pre-existing from Story 1.4; a second collision throws a SQLite UNIQUE constraint error surfaced as 500; add a retry loop or deterministic suffix when the DB layer approaches scale
