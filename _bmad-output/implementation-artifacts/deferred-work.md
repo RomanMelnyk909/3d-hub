@@ -68,3 +68,9 @@
 - `PREDEFINED_TAGS` IDs (`tag-001` through `tag-015`) in `lib/constants.ts` are hardcoded and must match DB seed values — `setModelTags` silently skips missing IDs; add a startup validation check before the DB grows divergent
 - Storage path construction in `createModelFiles` (`lib/db/models.ts`) duplicates path logic from the storage layer — refactor to a shared path-builder utility before the path format changes
 - No standalone `clearDraftId` store action — `reset()` clears `draftId` for the main flow, but edge paths (e.g. publish success without reset) may leave a stale `draftId`; add `clearDraftId` if those paths are introduced
+
+## Deferred from: code review of 3-1-search-discovery-data-layer (2026-05-06)
+
+- `models_fts` orphan rows on model deletion — FTS5 virtual tables don't participate in FK cascades; any future model-delete function must issue an explicit `DELETE FROM models_fts WHERE model_id = ?` before or alongside deleting the model row (`lib/db/schema.sql`)
+- TOCTOU gap between `db.exec(schema)` and ALTER TABLE in `createConnection` — on concurrent cold-starts SQLite's file lock prevents corruption but the race error is silently caught; acceptable for single-process dev/VPS but flag if moving to multi-worker serverless (`lib/db/index.ts:~24-30`)
+- Creator username enumeration via unauthenticated search suggestions — `getSearchSuggestions` exposes all usernames via LIKE query with no auth or rate limit; by design for a public creator-discovery platform; revisit if privacy requirements change (`lib/db/search.ts:~89-93`)

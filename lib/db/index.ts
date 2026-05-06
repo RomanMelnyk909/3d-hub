@@ -23,6 +23,30 @@ function createConnection(): Database.Database {
   const schema = fs.readFileSync(schemaPath, 'utf-8')
   db.exec(schema)
 
+  // ALTER TABLE does not support IF NOT EXISTS — run with try/catch for idempotency
+  try {
+    db.exec('ALTER TABLE models ADD COLUMN category_id TEXT REFERENCES categories(id)')
+  } catch (e) {
+    if (!(e instanceof Error) || !e.message.includes('duplicate column name')) throw e
+  }
+  db.exec('CREATE INDEX IF NOT EXISTS idx_models_category_id ON models(category_id)')
+
+  // Backfill FTS index for models published before this schema was applied
+  try {
+    db.exec(`
+      INSERT INTO models_fts(model_id, title, description, tags)
+      SELECT m.id, m.title, COALESCE(m.description, ''),
+        COALESCE((
+          SELECT GROUP_CONCAT(t.name, ' ')
+          FROM tags t JOIN model_tags mt ON t.id = mt.tag_id
+          WHERE mt.model_id = m.id
+        ), '')
+      FROM models m
+      WHERE m.is_published = 1
+        AND m.id NOT IN (SELECT model_id FROM models_fts)
+    `)
+  } catch { /* no published models to backfill */ }
+
   return db
 }
 

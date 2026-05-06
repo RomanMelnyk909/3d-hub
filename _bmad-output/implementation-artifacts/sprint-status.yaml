@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-04
-last_updated: 2026-05-06  # story 2-4 done
+last_updated: 2026-05-06  # story 3-2 ready-for-dev
 project: 3d-hub  # updated: story 1-5 done
 project_key: NOKEY
 tracking_system: file-system
@@ -60,9 +60,9 @@ development_status:
   epic-2-retrospective: optional
 
   # Epic 3: Model Discovery & Browsing
-  epic-3: backlog
-  3-1-search-discovery-data-layer: backlog
-  3-2-model-card-component-homepage-grid: backlog
+  epic-3: in-progress
+  3-1-search-discovery-data-layer: done
+  3-2-model-card-component-homepage-grid: ready-for-dev
   3-3-category-pages-navigation: backlog
   3-4-search-bar-filters-empty-states: backlog
   epic-3-retrospective: optional

@@ -1,8 +1,10 @@
 import { basename } from 'path'
 import type { Model, DraftModel } from '@/types/model'
+import type { PaginatedResponse } from '@/types/api'
 import { db } from './index'
+import { PAGE_SIZE } from '@/lib/constants'
 
-interface DbModelRow {
+export interface DbModelRow {
   id: string
   user_id: string
   title: string
@@ -17,9 +19,10 @@ interface DbModelRow {
   download_count: number
   created_at: number
   published_at: number | null
+  category_id: string | null
 }
 
-function mapRowToModel(row: DbModelRow): Model {
+export function mapRowToModel(row: DbModelRow): Model {
   return {
     id: row.id,
     userId: row.user_id,
@@ -30,6 +33,7 @@ function mapRowToModel(row: DbModelRow): Model {
     supportsRequired: row.supports_required !== null ? Boolean(row.supports_required) : null,
     filamentType: row.filament_type,
     license: row.license,
+    categoryId: row.category_id ?? null,
     isPublished: Boolean(row.is_published),
     isDraft: Boolean(row.is_draft),
     downloadCount: row.download_count,
@@ -113,8 +117,22 @@ export function publishModel(id: string, userId: string): Model {
     `UPDATE models SET is_published = 1, is_draft = 0, published_at = ? WHERE id = ? AND is_draft = 1 AND user_id = ?`
   ).run(publishedAt, id, userId)
   if (result.changes === 0) throw new Error(`Model not found or not a draft: ${id}`)
+
   const model = getModelById(id)
   if (!model) throw new Error(`Model not found after publish: ${id}`)
+
+  const tags = db.prepare(
+    `SELECT t.name FROM tags t JOIN model_tags mt ON t.id = mt.tag_id WHERE mt.model_id = ?`
+  ).all(id) as { name: string }[]
+  const tagString = tags.map(t => t.name).join(' ')
+
+  db.transaction(() => {
+    db.prepare('DELETE FROM models_fts WHERE model_id = ?').run(id)
+    db.prepare(
+      'INSERT INTO models_fts(model_id, title, description, tags) VALUES (?, ?, ?, ?)'
+    ).run(id, model.title, model.description ?? '', tagString)
+  })()
+
   return model
 }
 
@@ -198,4 +216,50 @@ export function setModelTags(
       db.prepare('INSERT OR IGNORE INTO model_tags (model_id, tag_id) VALUES (?, ?)').run(modelId, tagId)
     }
   })()
+}
+
+export interface ListPublishedModelsOptions {
+  page?: number
+  limit?: number
+  category?: string
+  sort?: 'downloads' | 'newest'
+}
+
+export function listPublishedModels(opts: ListPublishedModelsOptions = {}): PaginatedResponse<Model> {
+  const page = Math.max(1, opts.page ?? 1)
+  const limit = Math.min(100, Math.max(1, opts.limit ?? PAGE_SIZE))
+  const offset = (page - 1) * limit
+  const orderByClause = opts.sort === 'newest' ? 'ORDER BY m.created_at DESC' : 'ORDER BY m.download_count DESC'
+
+  let whereClause = 'WHERE m.is_published = 1'
+  const params: (string | number)[] = []
+
+  if (opts.category) {
+    whereClause += ' AND m.category_id = (SELECT id FROM categories WHERE slug = ?)'
+    params.push(opts.category)
+  }
+
+  const total = (db.prepare(
+    `SELECT COUNT(*) as count FROM models m ${whereClause}`
+  ).get(...params) as { count: number }).count
+
+  const rows = db.prepare(
+    `SELECT m.* FROM models m ${whereClause} ${orderByClause} LIMIT ? OFFSET ?`
+  ).all(...params, limit, offset) as DbModelRow[]
+
+  return {
+    items: rows.map(mapRowToModel),
+    total,
+    page,
+    limit,
+    hasMore: offset + rows.length < total,
+  }
+}
+
+export function getFeaturedModels(limit: number): Model[] {
+  const safeLimit = Math.min(100, Math.max(1, limit))
+  const rows = db.prepare(
+    `SELECT * FROM models WHERE is_published = 1 ORDER BY download_count DESC LIMIT ?`
+  ).all(safeLimit) as DbModelRow[]
+  return rows.map(mapRowToModel)
 }

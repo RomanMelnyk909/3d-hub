@@ -27,7 +27,8 @@ CREATE TABLE IF NOT EXISTS models (
   is_draft INTEGER NOT NULL DEFAULT 1,
   download_count INTEGER NOT NULL DEFAULT 0,
   created_at INTEGER NOT NULL,
-  published_at INTEGER
+  published_at INTEGER,
+  category_id TEXT REFERENCES categories(id)
 );
 
 CREATE TABLE IF NOT EXISTS model_files (
@@ -78,6 +79,27 @@ CREATE INDEX IF NOT EXISTS idx_model_photos_model_id ON model_photos(model_id);
 CREATE INDEX IF NOT EXISTS idx_model_photos_model_display_order ON model_photos(model_id, display_order);
 CREATE INDEX IF NOT EXISTS idx_model_tags_model_id ON model_tags(model_id);
 CREATE INDEX IF NOT EXISTS idx_model_tags_tag_id ON model_tags(tag_id);
+
+-- ============================================================
+-- Epic 3: Search & Discovery Schema
+-- ============================================================
+
+CREATE VIRTUAL TABLE IF NOT EXISTS models_fts USING fts5(
+  model_id UNINDEXED,
+  title,
+  description,
+  tags
+);
+
+CREATE TABLE IF NOT EXISTS download_events (
+  id TEXT PRIMARY KEY,
+  model_id TEXT NOT NULL REFERENCES models(id) ON DELETE CASCADE,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  downloaded_at INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_download_events_model_id ON download_events(model_id);
+CREATE INDEX IF NOT EXISTS idx_download_events_user_id ON download_events(user_id);
 
 -- ============================================================
 -- Category seed (idempotent — INSERT OR IGNORE)

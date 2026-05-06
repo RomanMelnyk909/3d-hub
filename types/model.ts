@@ -15,6 +15,7 @@ export interface Model {
   supportsRequired: boolean | null
   filamentType: string | null
   license: string
+  categoryId: string | null
   isPublished: boolean
   isDraft: boolean
   downloadCount: number
