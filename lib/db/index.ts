@@ -17,6 +17,7 @@ function createConnection(): Database.Database {
 
   // WAL mode allows concurrent reads alongside writes
   db.pragma('journal_mode = WAL')
+  db.pragma('foreign_keys = ON')
 
   const schemaPath = path.join(process.cwd(), 'lib', 'db', 'schema.sql')
   const schema = fs.readFileSync(schemaPath, 'utf-8')

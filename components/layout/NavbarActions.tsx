@@ -29,6 +29,9 @@ export function NavbarActions({ user }: NavbarActionsProps) {
       <nav className="hidden sm:flex items-center gap-3">
         {user ? (
           <>
+            <Link href="/upload" className={cn(buttonVariants({ variant: 'default' }))}>
+              Upload
+            </Link>
             <span className="text-sm text-text-primary">{user.username}</span>
             <button
               onClick={() => signOut({ callbackUrl: '/' })}
@@ -63,6 +66,13 @@ export function NavbarActions({ user }: NavbarActionsProps) {
         <div className="absolute top-16 left-0 right-0 sm:hidden border-t border-border bg-bg-card px-4 pb-4 pt-2 flex flex-col gap-2">
           {user ? (
             <>
+              <Link
+                href="/upload"
+                className={cn(buttonVariants({ variant: 'default' }), 'w-full')}
+                onClick={() => setMobileOpen(false)}
+              >
+                Upload
+              </Link>
               <span className="text-sm text-text-primary px-2 py-1">{user.username}</span>
               <button
                 onClick={() => { setMobileOpen(false); signOut({ callbackUrl: '/' }) }}

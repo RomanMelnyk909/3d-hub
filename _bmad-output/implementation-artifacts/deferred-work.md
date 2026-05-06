@@ -41,3 +41,30 @@
 - `setState('idle')` before `router.push` in `LoginForm.tsx` allows a sub-frame window where the submit button re-enables — negligible in practice due to React batching; revisit if UX testing reveals a perceived double-submit issue
 - `signIn` CredentialsSignin error code not server-side logged — error is intentionally collapsed to a generic message to prevent email enumeration; structured logging (e.g., Pino) deferred to V2 per architecture decisions
 - Derived username collision loop runs only once in `app/api/auth/register/route.ts` — pre-existing from Story 1.4; a second collision throws a SQLite UNIQUE constraint error surfaced as 500; add a retry loop or deterministic suffix when the DB layer approaches scale
+
+## Deferred from: code review of 2-1-model-database-schema-repository-layer (2026-05-05)
+
+- `infillPercent` / `layer_height_mm` have no DB-level range constraints in `schema.sql` — application-layer validation (form/API) is the intended guard; add `CHECK` constraints if a data migration or integrity audit requires it
+- `license` field is free-text `TEXT` with only a default value — no `CHECK (license IN (...))` in schema or union type in TypeScript; enforce valid values at the API layer when license options are finalized
+- `is_published` + `is_draft` dual-column design — no `CHECK` constraint prevents `is_published = 1, is_draft = 1` simultaneously; `publishModel` sets both atomically so the risk is low; consider collapsing to a single `status` enum column if a future migration is needed
+
+## Deferred from: code review of 2-2-file-photo-upload-apis-storage-abstraction (2026-05-05)
+
+- `updateDraftModel`/`publishModel` have no `user_id` ownership filter — pre-existing from Story 2-1; Stories 2-3/2-4 API routes must add `AND user_id = ?` to their WHERE clauses or wrap DB calls with an ownership check before updating/publishing a model
+- `/api/files/[...path]` intentionally unauthenticated — pre-publish draft files are publicly accessible by UUID; acceptable for V1 local; must add auth or signed-URL gating before VPS/CDN deployment to prevent enumeration of unpublished model assets
+
+## Deferred from: code review of 2-3-upload-wizard-shell-steps-1-2-files-photos (2026-05-06)
+
+- Duplicate file uploads not deduplicated — same file can be uploaded multiple times; server creates duplicate fileId entries per upload; add a dedup check in FileUploadZone against the store's files array before calling addFile
+- res.json() on non-JSON server error response (e.g., HTML 500 page) throws before the `!res.ok` check, caught by outer try-catch, surfacing a generic "Upload failed" message — consider validating Content-Type header before calling res.json() for better error UX
+- previewUrl from POST /api/upload/photos response passed directly to next/image src without client-side origin validation — architectural concern for when photo storage moves to external CDN/signed URLs; validate previewUrl is a relative path or known-origin URL
+- No form or fieldset wrapper around upload zones — keyboard users cannot reach or activate file inputs via Enter/Return; address in a dedicated accessibility pass
+- formatBytes utility defined locally in FileUploadZone.tsx — should be extracted to lib/utils if needed by PhotoUploadZone or other components
+
+## Deferred from: code review of 2-4-upload-wizard-steps-3-5-metadata-tags-preview-publish (2026-05-06)
+
+- `aria-live` region in `TagSelector.tsx` does not announce pre-existing chips restored from localStorage rehydration — minor a11y gap for resumed sessions; address in a dedicated accessibility pass
+- `getModelById` uses `SELECT *` instead of an explicit column list in `lib/db/models.ts` — safe while schema is fully controlled; switch to explicit columns if query complexity grows
+- `PREDEFINED_TAGS` IDs (`tag-001` through `tag-015`) in `lib/constants.ts` are hardcoded and must match DB seed values — `setModelTags` silently skips missing IDs; add a startup validation check before the DB grows divergent
+- Storage path construction in `createModelFiles` (`lib/db/models.ts`) duplicates path logic from the storage layer — refactor to a shared path-builder utility before the path format changes
+- No standalone `clearDraftId` store action — `reset()` clears `draftId` for the main flow, but edge paths (e.g. publish success without reset) may leave a stale `draftId`; add `clearDraftId` if those paths are introduced

@@ -5,7 +5,16 @@ export const authConfig = {
     signIn: '/login',
   },
   callbacks: {
-    authorized({ auth }) {
+    authorized({ auth, request }) {
+      if (request.nextUrl.pathname.startsWith('/api/')) {
+        if (!auth?.user) {
+          return Response.json(
+            { error: 'Authentication required', code: 'UNAUTHENTICATED' },
+            { status: 401 }
+          )
+        }
+        return true
+      }
       return !!auth?.user
     },
   },

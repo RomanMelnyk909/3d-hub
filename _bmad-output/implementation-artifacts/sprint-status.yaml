@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-04
-last_updated: 2026-05-05  # story 1-5 done
+last_updated: 2026-05-06  # story 2-4 done
 project: 3d-hub  # updated: story 1-5 done
 project_key: NOKEY
 tracking_system: file-system
@@ -52,11 +52,11 @@ development_status:
   epic-1-retrospective: optional
 
   # Epic 2: Model Upload & Publishing
-  epic-2: backlog
-  2-1-model-database-schema-repository-layer: backlog
-  2-2-file-photo-upload-apis-storage-abstraction: backlog
-  2-3-upload-wizard-shell-steps-1-2-files-photos: backlog
-  2-4-upload-wizard-steps-3-5-metadata-tags-preview-publish: backlog
+  epic-2: in-progress
+  2-1-model-database-schema-repository-layer: done
+  2-2-file-photo-upload-apis-storage-abstraction: done
+  2-3-upload-wizard-shell-steps-1-2-files-photos: done
+  2-4-upload-wizard-steps-3-5-metadata-tags-preview-publish: done
   epic-2-retrospective: optional
 
   # Epic 3: Model Discovery & Browsing
