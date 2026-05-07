@@ -1,5 +1,5 @@
 import { basename } from 'path'
-import type { Model, DraftModel } from '@/types/model'
+import type { Model, DraftModel, ModelCardData } from '@/types/model'
 import type { PaginatedResponse } from '@/types/api'
 import { db } from './index'
 import { PAGE_SIZE } from '@/lib/constants'
@@ -20,6 +20,8 @@ export interface DbModelRow {
   created_at: number
   published_at: number | null
   category_id: string | null
+  primary_photo_filename?: string | null
+  primary_tag_name?: string | null
 }
 
 export function mapRowToModel(row: DbModelRow): Model {
@@ -39,6 +41,20 @@ export function mapRowToModel(row: DbModelRow): Model {
     downloadCount: row.download_count,
     createdAt: new Date(row.created_at * 1000).toISOString(),
     publishedAt: row.published_at ? new Date(row.published_at * 1000).toISOString() : null,
+  }
+}
+
+const MODEL_CARD_FIELDS = `
+  m.*,
+  (SELECT filename FROM model_photos WHERE model_id = m.id ORDER BY display_order ASC LIMIT 1) AS primary_photo_filename,
+  (SELECT t.name FROM tags t JOIN model_tags mt ON t.id = mt.tag_id WHERE mt.model_id = m.id ORDER BY mt.tag_id ASC LIMIT 1) AS primary_tag_name
+`
+
+function mapRowToModelCardData(row: DbModelRow): ModelCardData {
+  return {
+    ...mapRowToModel(row),
+    primaryPhotoFilename: row.primary_photo_filename ?? null,
+    primaryTagName: row.primary_tag_name ?? null,
   }
 }
 
@@ -223,9 +239,10 @@ export interface ListPublishedModelsOptions {
   limit?: number
   category?: string
   sort?: 'downloads' | 'newest'
+  excludeIds?: string[]
 }
 
-export function listPublishedModels(opts: ListPublishedModelsOptions = {}): PaginatedResponse<Model> {
+export function listPublishedModels(opts: ListPublishedModelsOptions = {}): PaginatedResponse<ModelCardData> {
   const page = Math.max(1, opts.page ?? 1)
   const limit = Math.min(100, Math.max(1, opts.limit ?? PAGE_SIZE))
   const offset = (page - 1) * limit
@@ -239,16 +256,22 @@ export function listPublishedModels(opts: ListPublishedModelsOptions = {}): Pagi
     params.push(opts.category)
   }
 
+  if (opts.excludeIds && opts.excludeIds.length > 0) {
+    const placeholders = opts.excludeIds.map(() => '?').join(', ')
+    whereClause += ` AND m.id NOT IN (${placeholders})`
+    params.push(...opts.excludeIds)
+  }
+
   const total = (db.prepare(
     `SELECT COUNT(*) as count FROM models m ${whereClause}`
   ).get(...params) as { count: number }).count
 
   const rows = db.prepare(
-    `SELECT m.* FROM models m ${whereClause} ${orderByClause} LIMIT ? OFFSET ?`
+    `SELECT ${MODEL_CARD_FIELDS} FROM models m ${whereClause} ${orderByClause} LIMIT ? OFFSET ?`
   ).all(...params, limit, offset) as DbModelRow[]
 
   return {
-    items: rows.map(mapRowToModel),
+    items: rows.map(mapRowToModelCardData),
     total,
     page,
     limit,
@@ -256,10 +279,10 @@ export function listPublishedModels(opts: ListPublishedModelsOptions = {}): Pagi
   }
 }
 
-export function getFeaturedModels(limit: number): Model[] {
+export function getFeaturedModels(limit: number): ModelCardData[] {
   const safeLimit = Math.min(100, Math.max(1, limit))
   const rows = db.prepare(
-    `SELECT * FROM models WHERE is_published = 1 ORDER BY download_count DESC LIMIT ?`
+    `SELECT ${MODEL_CARD_FIELDS} FROM models m WHERE m.is_published = 1 ORDER BY m.download_count DESC LIMIT ?`
   ).all(safeLimit) as DbModelRow[]
-  return rows.map(mapRowToModel)
+  return rows.map(mapRowToModelCardData)
 }

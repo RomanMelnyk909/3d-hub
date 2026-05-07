@@ -25,6 +25,11 @@ export interface Model {
 
 export type DraftModel = Model
 
+export interface ModelCardData extends Model {
+  primaryPhotoFilename: string | null
+  primaryTagName: string | null
+}
+
 export interface ModelFile {
   id: string
   modelId: string

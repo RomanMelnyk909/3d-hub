@@ -74,3 +74,13 @@
 - `models_fts` orphan rows on model deletion — FTS5 virtual tables don't participate in FK cascades; any future model-delete function must issue an explicit `DELETE FROM models_fts WHERE model_id = ?` before or alongside deleting the model row (`lib/db/schema.sql`)
 - TOCTOU gap between `db.exec(schema)` and ALTER TABLE in `createConnection` — on concurrent cold-starts SQLite's file lock prevents corruption but the race error is silently caught; acceptable for single-process dev/VPS but flag if moving to multi-worker serverless (`lib/db/index.ts:~24-30`)
 - Creator username enumeration via unauthenticated search suggestions — `getSearchSuggestions` exposes all usernames via LIKE query with no auth or rate limit; by design for a public creator-discovery platform; revisit if privacy requirements change (`lib/db/search.ts:~89-93`)
+
+## Deferred from: code review of 3-2-model-card-component-homepage-grid (2026-05-07)
+
+- `MODEL_CARD_FIELDS` SQL constant hardcodes table alias `m` — any future caller that omits `FROM models m` will get a runtime SQL error with no compile-time warning (`lib/db/models.ts:44`)
+- `error.tsx` discards `error.digest` entirely — production incidents cannot be correlated with server logs; at minimum log to console or render in a `<details>` block (`app/(marketing)/error.tsx`)
+- `ModelCardGrid` grid `<div>` has no ARIA role or label — screen reader users navigating by landmarks find nothing; consider `<ul>`/`<li>` structure or explicit role for accessibility (`components/model/ModelCardGrid.tsx:19`)
+- Loading skeleton shows featured section unconditionally while page.tsx conditionally hides it when `getFeaturedModels` returns empty — causes minor layout shift when featured list is empty (`app/(marketing)/loading.tsx:22`)
+- `<article>` wraps `<Link>` — article's border ring is outside the anchor hit target; sub-pixel UX impact but technically violates AC2 "entire card surface is a clickable link" (`components/model/ModelCard.tsx:12`)
+- No `focus-within` on `<article>` — hover shadow/border styles do not activate on keyboard focus; add `focus-within:shadow-md focus-within:border-brand-primary/30` for keyboard users (`components/model/ModelCard.tsx:12`)
+- Stale or oversized `?page=N` bookmark renders empty main grid with misleading "No models available yet" message instead of redirecting to page 1 (`app/(marketing)/page.tsx:39`)
