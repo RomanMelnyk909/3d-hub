@@ -50,7 +50,7 @@ const MODEL_CARD_FIELDS = `
   (SELECT t.name FROM tags t JOIN model_tags mt ON t.id = mt.tag_id WHERE mt.model_id = m.id ORDER BY mt.tag_id ASC LIMIT 1) AS primary_tag_name
 `
 
-function mapRowToModelCardData(row: DbModelRow): ModelCardData {
+export function mapRowToModelCardData(row: DbModelRow): ModelCardData {
   return {
     ...mapRowToModel(row),
     primaryPhotoFilename: row.primary_photo_filename ?? null,

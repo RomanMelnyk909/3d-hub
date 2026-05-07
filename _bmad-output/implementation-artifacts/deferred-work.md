@@ -93,3 +93,12 @@
 - `<article>` wraps `<Link>` — article's border ring is outside the anchor hit target; sub-pixel UX impact but technically violates AC2 "entire card surface is a clickable link" (`components/model/ModelCard.tsx:12`)
 - No `focus-within` on `<article>` — hover shadow/border styles do not activate on keyboard focus; add `focus-within:shadow-md focus-within:border-brand-primary/30` for keyboard users (`components/model/ModelCard.tsx:12`)
 - Stale or oversized `?page=N` bookmark renders empty main grid with misleading "No models available yet" message instead of redirecting to page 1 (`app/(marketing)/page.tsx:39`)
+
+## Deferred from: code review of 3-4-search-bar-filters-empty-states (2026-05-07)
+
+- Double SearchBar instances both mounted — desktop and mobile bars each fire a separate debounced fetch per keystroke; fix requires context-based shared state or dynamic rendering (`components/layout/Navbar.tsx`)
+- `sort` parameter cast without runtime validation — invalid sort values silently fall through to FTS rank sort; add an allowlist check at both API and page boundary (`app/api/search/route.ts:24`, `app/search/page.tsx:25`)
+- Creator suggestions query returns all users regardless of published status — users with no published models appear in autocomplete (`lib/db/search.ts`)
+- `SearchFilters` Suspense `fallback={null}` — filter controls entirely absent during SSR/hydration pass, causing layout shift; replace with a skeleton fallback (`app/search/page.tsx:69`)
+- `SEARCH_CARD_FIELDS` duplicates `MODEL_CARD_FIELDS` from `models.ts` — two identical SQL constant definitions; extract to shared constant if photo/tag query logic ever needs to change (`lib/db/search.ts:8`)
+- Very large `page` parameter (e.g. `?page=999999999`) computes an enormous SQLite OFFSET, causing an expensive no-op table scan; add a max-page guard (`app/api/search/route.ts`, `app/search/page.tsx`)
