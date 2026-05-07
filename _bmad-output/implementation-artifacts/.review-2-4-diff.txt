@@ -1,0 +1,1240 @@
+﻿### TRACKED CHANGES (git diff HEAD)
+diff --git a/lib/constants.ts b/lib/constants.ts
+index 5c72def..aeb7386 100644
+--- a/lib/constants.ts
++++ b/lib/constants.ts
+@@ -1,3 +1,23 @@
+ export const MAX_FILE_SIZE_BYTES = 26214400;
+ export const ALLOWED_MODEL_EXTENSIONS = [".stl", ".3mf"];
+ export const PAGE_SIZE = 24;
++
++export const FILAMENT_TYPES: string[] = ['PLA', 'PETG', 'ABS', 'ASA', 'TPU', 'Nylon', 'Resin', 'Other'];
++
++export const PREDEFINED_TAGS = [
++  { id: 'tag-001', name: 'functional' },
++  { id: 'tag-002', name: 'decorative' },
++  { id: 'tag-003', name: 'workshop' },
++  { id: 'tag-004', name: 'tools' },
++  { id: 'tag-005', name: 'miniature' },
++  { id: 'tag-006', name: 'home' },
++  { id: 'tag-007', name: 'garden' },
++  { id: 'tag-008', name: 'gaming' },
++  { id: 'tag-009', name: 'jewelry' },
++  { id: 'tag-010', name: 'educational' },
++  { id: 'tag-011', name: 'organizer' },
++  { id: 'tag-012', name: 'holder' },
++  { id: 'tag-013', name: 'mount' },
++  { id: 'tag-014', name: 'enclosure' },
++  { id: 'tag-015', name: 'no-supports' },
++] as const;
+diff --git a/lib/validations.ts b/lib/validations.ts
+index 448051e..b7fc535 100644
+--- a/lib/validations.ts
++++ b/lib/validations.ts
+@@ -19,3 +19,24 @@ export const loginSchema = z.object({
+ })
+ 
+ export type LoginInput = z.infer<typeof loginSchema>
++
++export const modelMetadataSchema = z.object({
++  title: z.string().min(1, 'Title is required').max(100, 'Title must be 100 characters or fewer'),
++  description: z
++    .string()
++    .min(1, 'Description is required')
++    .max(2000, 'Description must be 2000 characters or fewer'),
++  layerHeightMm: z.coerce
++    .number()
++    .min(0.05, 'Minimum 0.05mm')
++    .max(1.0, 'Maximum 1.0mm'),
++  infillPercent: z.coerce
++    .number()
++    .int('Must be a whole number')
++    .min(0, '0–100%')
++    .max(100, '0–100%'),
++  supportsRequired: z.enum(['true', 'false']),
++  filamentType: z.string().min(1, 'Select a filament type'),
++})
++
++export type ModelMetadataFormValues = z.infer<typeof modelMetadataSchema>
+
+### UNTRACKED FILE: stores/wizardStore.ts (full content as added)
+diff --git a/stores/wizardStore.ts b/stores/wizardStore.ts
+new file mode 100644
+index 0000000..5e40644
+--- /dev/null
++++ b/stores/wizardStore.ts
+@@ -0,0 +1,94 @@
++import { create } from 'zustand'
++import { persist, createJSONStorage } from 'zustand/middleware'
++import type { ModelMetadataFormValues } from '@/lib/validations'
++
++export interface WizardFile {
++  fileId: string
++  filename: string
++  size: number
++}
++
++export interface WizardPhoto {
++  photoId: string
++  filename: string
++  previewUrl: string
++}
++
++export type { ModelMetadataFormValues }
++
++interface WizardState {
++  currentStep: number
++  files: WizardFile[]
++  photos: WizardPhoto[]
++  draftId: string | null
++  metadata: ModelMetadataFormValues | null
++  selectedPredefinedTagIds: string[]
++  customTagNames: string[]
++  addFile: (file: WizardFile) => void
++  removeFile: (fileId: string) => void
++  addPhoto: (photo: WizardPhoto) => void
++  removePhoto: (photoId: string) => void
++  goToStep: (step: number) => void
++  reset: () => void
++  setDraftId: (id: string) => void
++  setMetadata: (m: ModelMetadataFormValues) => void
++  togglePredefinedTag: (id: string) => void
++  addCustomTag: (name: string) => void
++  removeCustomTag: (name: string) => void
++}
++
++export const useWizardStore = create<WizardState>()(
++  persist(
++    (set) => ({
++      currentStep: 1,
++      files: [],
++      photos: [],
++      draftId: null,
++      metadata: null,
++      selectedPredefinedTagIds: [],
++      customTagNames: [],
++      addFile: (file) => set((state) => ({ files: [...state.files, file] })),
++      removeFile: (fileId) => set((state) => ({ files: state.files.filter((f) => f.fileId !== fileId) })),
++      addPhoto: (photo) => set((state) => ({ photos: [...state.photos, photo] })),
++      removePhoto: (photoId) => set((state) => ({ photos: state.photos.filter((p) => p.photoId !== photoId) })),
++      goToStep: (step) => set({ currentStep: Math.max(1, Math.min(5, step)) }),
++      reset: () => set({
++        currentStep: 1,
++        files: [],
++        photos: [],
++        draftId: null,
++        metadata: null,
++        selectedPredefinedTagIds: [],
++        customTagNames: [],
++      }),
++      setDraftId: (id) => set({ draftId: id }),
++      setMetadata: (m) => set({ metadata: m }),
++      togglePredefinedTag: (id) => set((state) => ({
++        selectedPredefinedTagIds: state.selectedPredefinedTagIds.includes(id)
++          ? state.selectedPredefinedTagIds.filter((t) => t !== id)
++          : [...state.selectedPredefinedTagIds, id],
++      })),
++      addCustomTag: (name) => set((state) => ({
++        customTagNames: state.customTagNames.includes(name)
++          ? state.customTagNames
++          : [...state.customTagNames, name],
++      })),
++      removeCustomTag: (name) => set((state) => ({
++        customTagNames: state.customTagNames.filter((t) => t !== name),
++      })),
++    }),
++    {
++      name: '3d-hub-wizard',
++      storage: createJSONStorage(() => localStorage),
++      partialize: (s) => ({
++        draftId: s.draftId,
++        currentStep: s.currentStep,
++        files: s.files,
++        photos: s.photos,
++        metadata: s.metadata,
++        selectedPredefinedTagIds: s.selectedPredefinedTagIds,
++        customTagNames: s.customTagNames,
++      }),
++    }
++  )
++)
+
+### UNTRACKED FILE: lib/db/models.ts (full content as added)
+diff --git a/lib/db/models.ts b/lib/db/models.ts
+new file mode 100644
+index 0000000..8045668
+--- /dev/null
++++ b/lib/db/models.ts
+@@ -0,0 +1,185 @@
++import type { Model, DraftModel } from '@/types/model'
++import { db } from './index'
++
++interface DbModelRow {
++  id: string
++  user_id: string
++  title: string
++  description: string | null
++  layer_height_mm: number | null
++  infill_percent: number | null
++  supports_required: number | null
++  filament_type: string | null
++  license: string
++  is_published: number
++  is_draft: number
++  download_count: number
++  created_at: number
++  published_at: number | null
++}
++
++function mapRowToModel(row: DbModelRow): Model {
++  return {
++    id: row.id,
++    userId: row.user_id,
++    title: row.title,
++    description: row.description,
++    layerHeightMm: row.layer_height_mm,
++    infillPercent: row.infill_percent,
++    supportsRequired: row.supports_required !== null ? Boolean(row.supports_required) : null,
++    filamentType: row.filament_type,
++    license: row.license,
++    isPublished: Boolean(row.is_published),
++    isDraft: Boolean(row.is_draft),
++    downloadCount: row.download_count,
++    createdAt: new Date(row.created_at * 1000).toISOString(),
++    publishedAt: row.published_at ? new Date(row.published_at * 1000).toISOString() : null,
++  }
++}
++
++interface UpdateDraftModelInput {
++  title?: string
++  description?: string | null
++  layerHeightMm?: number | null
++  infillPercent?: number | null
++  supportsRequired?: boolean | null
++  filamentType?: string | null
++}
++
++// Inline types to avoid circular import with stores/wizardStore.ts
++interface WizardFileInput {
++  fileId: string
++  filename: string
++  size: number
++}
++
++interface WizardPhotoInput {
++  photoId: string
++  filename: string
++  previewUrl: string
++}
++
++export function createDraftModel(userId: string, data: { title: string }): DraftModel {
++  const id = crypto.randomUUID()
++  const createdAt = Math.floor(Date.now() / 1000)
++  db.prepare(
++    `INSERT INTO models (id, user_id, title, is_draft, is_published, download_count, created_at, license)
++     VALUES (?, ?, ?, 1, 0, 0, ?, 'free')`
++  ).run(id, userId, data.title, createdAt)
++  return getModelById(id) as DraftModel
++}
++
++export function updateDraftModel(id: string, userId: string, data: UpdateDraftModelInput): Model {
++  type ColVal = { col: string; val: string | number | null }
++  const fields: ColVal[] = []
++
++  if ('title' in data)            fields.push({ col: 'title',           val: data.title ?? null })
++  if ('description' in data)      fields.push({ col: 'description',     val: data.description ?? null })
++  if ('layerHeightMm' in data)    fields.push({ col: 'layer_height_mm', val: data.layerHeightMm ?? null })
++  if ('infillPercent' in data)    fields.push({ col: 'infill_percent',  val: data.infillPercent ?? null })
++  if ('filamentType' in data)     fields.push({ col: 'filament_type',   val: data.filamentType ?? null })
++  if ('supportsRequired' in data) fields.push({
++    col: 'supports_required',
++    val: data.supportsRequired !== null && data.supportsRequired !== undefined
++      ? (data.supportsRequired ? 1 : 0)
++      : null,
++  })
++
++  if (fields.length > 0) {
++    const setClause = fields.map(f => `${f.col} = ?`).join(', ')
++    const params: (string | number | null)[] = [...fields.map(f => f.val), id, userId]
++    const result = db.prepare(
++      `UPDATE models SET ${setClause} WHERE id = ? AND is_draft = 1 AND user_id = ?`
++    ).run(...params)
++    if (result.changes === 0) throw new Error(`Model not found or not a draft: ${id}`)
++  }
++
++  const model = getModelById(id)
++  if (!model) throw new Error(`Model not found: ${id}`)
++  return model
++}
++
++export function publishModel(id: string, userId: string): Model {
++  const publishedAt = Math.floor(Date.now() / 1000)
++  const result = db.prepare(
++    `UPDATE models SET is_published = 1, is_draft = 0, published_at = ? WHERE id = ? AND is_draft = 1 AND user_id = ?`
++  ).run(publishedAt, id, userId)
++  if (result.changes === 0) throw new Error(`Model not found or not a draft: ${id}`)
++  const model = getModelById(id)
++  if (!model) throw new Error(`Model not found after publish: ${id}`)
++  return model
++}
++
++export function getModelById(id: string): Model | null {
++  const row = db
++    .prepare('SELECT * FROM models WHERE id = ?')
++    .get(id) as DbModelRow | undefined
++  return row ? mapRowToModel(row) : null
++}
++
++export function listModelsByUser(userId: string): Model[] {
++  const rows = db
++    .prepare('SELECT * FROM models WHERE user_id = ? ORDER BY created_at DESC')
++    .all(userId) as DbModelRow[]
++  return rows.map(mapRowToModel)
++}
++
++export function createModelFiles(modelId: string, files: WizardFileInput[]): void {
++  const stmt = db.prepare(
++    `INSERT INTO model_files (id, model_id, filename, file_size_bytes, original_name, created_at)
++     VALUES (?, ?, ?, ?, ?, ?)`
++  )
++  for (const file of files) {
++    stmt.run(
++      crypto.randomUUID(),
++      modelId,
++      'models/' + file.fileId + '/files/' + file.filename,
++      file.size,
++      file.filename,
++      Math.floor(Date.now() / 1000)
++    )
++  }
++}
++
++export function createModelPhotos(modelId: string, photos: WizardPhotoInput[], displayOffset = 0): void {
++  const stmt = db.prepare(
++    `INSERT INTO model_photos (id, model_id, filename, alt_text, display_order, created_at)
++     VALUES (?, ?, ?, ?, ?, ?)`
++  )
++  photos.forEach((photo, idx) => {
++    stmt.run(
++      crypto.randomUUID(),
++      modelId,
++      'models/' + photo.photoId + '/photos/' + photo.filename,
++      null,
++      idx + displayOffset,
++      Math.floor(Date.now() / 1000)
++    )
++  })
++}
++
++export function setModelTags(
++  modelId: string,
++  predefinedTagIds: string[],
++  customTagNames: string[]
++): void {
++  db.prepare('DELETE FROM model_tags WHERE model_id = ?').run(modelId)
++
++  for (const tagId of predefinedTagIds) {
++    const exists = db.prepare('SELECT id FROM tags WHERE id = ?').get(tagId)
++    if (exists) {
++      db.prepare('INSERT OR IGNORE INTO model_tags (model_id, tag_id) VALUES (?, ?)').run(modelId, tagId)
++    }
++  }
++
++  for (const name of customTagNames) {
++    const trimmed = name.trim().toLowerCase()
++    if (!trimmed) continue
++    const existing = db.prepare('SELECT id FROM tags WHERE name = ?').get(trimmed) as { id: string } | undefined
++    const tagId = existing?.id ?? crypto.randomUUID()
++    if (!existing) {
++      db.prepare('INSERT INTO tags (id, name, is_predefined) VALUES (?, ?, 0)').run(tagId, trimmed)
++    }
++    db.prepare('INSERT OR IGNORE INTO model_tags (model_id, tag_id) VALUES (?, ?)').run(modelId, tagId)
++  }
++}
+
+### UNTRACKED FILE: components/upload/UploadWizard.tsx (full content as added)
+diff --git a/components/upload/UploadWizard.tsx b/components/upload/UploadWizard.tsx
+new file mode 100644
+index 0000000..edeb8d3
+--- /dev/null
++++ b/components/upload/UploadWizard.tsx
+@@ -0,0 +1,179 @@
++'use client'
++
++import { useRef, useState } from 'react'
++import { toast } from 'sonner'
++import { useWizardStore } from '@/stores/wizardStore'
++import { WizardStepIndicator } from './WizardStepIndicator'
++import { FileUploadZone } from './FileUploadZone'
++import { PhotoUploadZone } from './PhotoUploadZone'
++import { ModelMetadataForm, type MetadataFormHandle } from './ModelMetadataForm'
++import { TagSelector } from './TagSelector'
++import { PublishPreview } from './PublishPreview'
++import { Button } from '@/components/ui/button'
++
++export function UploadWizard() {
++  const {
++    currentStep,
++    files,
++    photos,
++    draftId,
++    metadata,
++    selectedPredefinedTagIds,
++    customTagNames,
++    goToStep,
++    reset,
++    setDraftId,
++  } = useWizardStore()
++
++  const metadataFormRef = useRef<MetadataFormHandle>(null)
++  const [isMetadataFormComplete, setIsMetadataFormComplete] = useState(false)
++  const [dismissed, setDismissed] = useState(false)
++
++  // Shows when persisted draft exists but no files/photos are loaded yet (cold start)
++  const showResumePrompt = !dismissed && draftId !== null && files.length === 0 && photos.length === 0
++
++  const isContinueDisabled =
++    (currentStep === 1 && files.length === 0) ||
++    (currentStep === 2 && photos.length === 0) ||
++    (currentStep === 3 && !isMetadataFormComplete)
++
++  function handleContinueClick() {
++    if (currentStep === 3) {
++      metadataFormRef.current?.submit()
++      return
++    }
++    goToStep(currentStep + 1)
++  }
++
++  async function handleSaveDraft() {
++    if (!metadata) return
++    try {
++      if (draftId === null) {
++        const res = await fetch('/api/models', {
++          method: 'POST',
++          headers: { 'Content-Type': 'application/json' },
++          body: JSON.stringify({
++            title: metadata.title,
++            description: metadata.description,
++            layerHeightMm: metadata.layerHeightMm,
++            infillPercent: metadata.infillPercent,
++            supportsRequired: metadata.supportsRequired,
++            filamentType: metadata.filamentType,
++            files,
++            photos,
++            tagIds: selectedPredefinedTagIds,
++            customTagNames,
++          }),
++        })
++        const data = await res.json()
++        if (!res.ok) {
++          toast.error(data.error ?? 'Failed to save draft')
++          return
++        }
++        setDraftId(data.id)
++      } else {
++        const res = await fetch(`/api/models/${draftId}`, {
++          method: 'PATCH',
++          headers: { 'Content-Type': 'application/json' },
++          body: JSON.stringify({
++            title: metadata.title,
++            description: metadata.description,
++            layerHeightMm: metadata.layerHeightMm,
++            infillPercent: metadata.infillPercent,
++            supportsRequired: metadata.supportsRequired,
++            filamentType: metadata.filamentType,
++            tagIds: selectedPredefinedTagIds,
++            customTagNames,
++          }),
++        })
++        const data = await res.json()
++        if (!res.ok) {
++          toast.error(data.error ?? 'Failed to save draft')
++          return
++        }
++      }
++      toast('Draft saved')
++    } catch {
++      toast.error('Failed to save draft')
++    }
++  }
++
++  return (
++    <div>
++      {showResumePrompt && (
++        <div className="mb-4 flex items-center justify-between rounded-lg border border-border bg-bg-subtle p-3 text-sm">
++          <span className="text-text-primary">You have an unsaved draft.</span>
++          <div className="flex gap-2">
++            <Button
++              variant="ghost"
++              size="sm"
++              onClick={() => {
++                reset()
++                setDismissed(true)
++              }}
++            >
++              Start New
++            </Button>
++            <Button
++              variant="default"
++              size="sm"
++              onClick={() => setDismissed(true)}
++            >
++              Resume
++            </Button>
++          </div>
++        </div>
++      )}
++
++      <WizardStepIndicator currentStep={currentStep} />
++
++      <div className="mb-8">
++        {currentStep === 1 && <FileUploadZone />}
++        {currentStep === 2 && <PhotoUploadZone />}
++        {currentStep === 3 && (
++          <ModelMetadataForm
++            ref={metadataFormRef}
++            initialValues={metadata ?? undefined}
++            onSubmitSuccess={() => goToStep(4)}
++            onCompletenessChange={setIsMetadataFormComplete}
++          />
++        )}
++        {currentStep === 4 && <TagSelector />}
++        {currentStep === 5 && <PublishPreview />}
++      </div>
++
++      <div className="flex items-center justify-between">
++        {currentStep > 1 ? (
++          <Button variant="ghost" onClick={() => goToStep(currentStep - 1)}>
++            Back
++          </Button>
++        ) : (
++          <span />
++        )}
++
++        <div className="flex items-center gap-3">
++          {currentStep >= 3 && metadata !== null && currentStep < 5 && (
++            <Button variant="outline" onClick={handleSaveDraft}>
++              Save Draft
++            </Button>
++          )}
++
++          <div className="flex flex-col items-end gap-1">
++            {currentStep < 5 && (
++              <Button
++                variant="default"
++                disabled={isContinueDisabled}
++                onClick={handleContinueClick}
++              >
++                Continue
++              </Button>
++            )}
++            {currentStep === 2 && photos.length === 0 && (
++              <p className="text-sm text-text-muted text-center mt-2">At least 1 photo required</p>
++            )}
++          </div>
++        </div>
++      </div>
++    </div>
++  )
++}
+
+### UNTRACKED FILE: app/api/models/route.ts (full content as added)
+diff --git a/app/api/models/route.ts b/app/api/models/route.ts
+new file mode 100644
+index 0000000..6e2ffd2
+--- /dev/null
++++ b/app/api/models/route.ts
+@@ -0,0 +1,102 @@
++import { NextResponse } from 'next/server'
++import { auth } from '@/lib/auth'
++import {
++  createDraftModel,
++  updateDraftModel,
++  createModelFiles,
++  createModelPhotos,
++  setModelTags,
++} from '@/lib/db/models'
++
++interface WizardFileInput {
++  fileId: string
++  filename: string
++  size: number
++}
++
++interface WizardPhotoInput {
++  photoId: string
++  filename: string
++  previewUrl: string
++}
++
++interface CreateModelBody {
++  title: string
++  description?: string | null
++  layerHeightMm?: number | null
++  infillPercent?: number | null
++  supportsRequired?: string | boolean | null
++  filamentType?: string | null
++  files: WizardFileInput[]
++  photos: WizardPhotoInput[]
++  tagIds?: string[]
++  customTagNames?: string[]
++}
++
++export async function POST(request: Request): Promise<Response> {
++  const session = await auth()
++  if (!session?.user?.userId) {
++    return NextResponse.json(
++      { error: 'Authentication required', code: 'UNAUTHENTICATED' },
++      { status: 401 }
++    )
++  }
++  const userId = session.user.userId
++
++  try {
++    const body: CreateModelBody = await request.json()
++
++    if (!body.title) {
++      return NextResponse.json(
++        { error: 'Title is required', code: 'VALIDATION_ERROR' },
++        { status: 400 }
++      )
++    }
++
++    const supportsRequired =
++      body.supportsRequired === 'true' || body.supportsRequired === true
++        ? true
++        : body.supportsRequired === 'false' || body.supportsRequired === false
++          ? false
++          : null
++
++    const draft = createDraftModel(userId, { title: body.title })
++
++    const hasExtraFields =
++      body.description !== undefined ||
++      body.layerHeightMm !== undefined ||
++      body.infillPercent !== undefined ||
++      body.supportsRequired !== undefined ||
++      body.filamentType !== undefined
++
++    const model = hasExtraFields
++      ? updateDraftModel(draft.id, userId, {
++          description: body.description ?? undefined,
++          layerHeightMm: body.layerHeightMm ?? undefined,
++          infillPercent: body.infillPercent ?? undefined,
++          supportsRequired,
++          filamentType: body.filamentType ?? undefined,
++        })
++      : draft
++
++    if (body.files && body.files.length > 0) {
++      createModelFiles(model.id, body.files)
++    }
++
++    if (body.photos && body.photos.length > 0) {
++      createModelPhotos(model.id, body.photos)
++    }
++
++    if (body.tagIds || body.customTagNames) {
++      setModelTags(model.id, body.tagIds ?? [], body.customTagNames ?? [])
++    }
++
++    return NextResponse.json(model, { status: 201 })
++  } catch (error) {
++    console.error('[POST /api/models]', error)
++    return NextResponse.json(
++      { error: 'Internal server error', code: 'INTERNAL_ERROR' },
++      { status: 500 }
++    )
++  }
++}
+
+### UNTRACKED FILE: app/api/models/[id]/route.ts (full content as added)
+diff --git a/app/api/models/[id]/route.ts b/app/api/models/[id]/route.ts
+new file mode 100644
+index 0000000..b99cdf5
+--- /dev/null
++++ b/app/api/models/[id]/route.ts
+@@ -0,0 +1,61 @@
++import { NextResponse } from 'next/server'
++import { auth } from '@/lib/auth'
++import { updateDraftModel, setModelTags } from '@/lib/db/models'
++
++interface UpdateModelBody {
++  title?: string
++  description?: string | null
++  layerHeightMm?: number | null
++  infillPercent?: number | null
++  supportsRequired?: string | boolean | null
++  filamentType?: string | null
++  tagIds?: string[]
++  customTagNames?: string[]
++}
++
++export async function PATCH(
++  request: Request,
++  { params }: { params: Promise<{ id: string }> }
++): Promise<Response> {
++  const session = await auth()
++  if (!session?.user?.userId) {
++    return NextResponse.json(
++      { error: 'Authentication required', code: 'UNAUTHENTICATED' },
++      { status: 401 }
++    )
++  }
++  const userId = session.user.userId
++
++  try {
++    const { id } = await params
++    const body: UpdateModelBody = await request.json()
++
++    const supportsRequired =
++      body.supportsRequired === 'true' || body.supportsRequired === true
++        ? true
++        : body.supportsRequired === 'false' || body.supportsRequired === false
++          ? false
++          : null
++
++    const model = updateDraftModel(id, userId, {
++      ...(body.title !== undefined && { title: body.title }),
++      ...(body.description !== undefined && { description: body.description }),
++      ...(body.layerHeightMm !== undefined && { layerHeightMm: body.layerHeightMm }),
++      ...(body.infillPercent !== undefined && { infillPercent: body.infillPercent }),
++      ...(body.supportsRequired !== undefined && { supportsRequired }),
++      ...(body.filamentType !== undefined && { filamentType: body.filamentType }),
++    })
++
++    if (body.tagIds !== undefined || body.customTagNames !== undefined) {
++      setModelTags(id, body.tagIds ?? [], body.customTagNames ?? [])
++    }
++
++    return NextResponse.json(model)
++  } catch (error) {
++    console.error('[PATCH /api/models/[id]]', error)
++    return NextResponse.json(
++      { error: 'Internal server error', code: 'INTERNAL_ERROR' },
++      { status: 500 }
++    )
++  }
++}
+
+### UNTRACKED FILE: app/api/models/[id]/publish/route.ts (full content as added)
+diff --git a/app/api/models/[id]/publish/route.ts b/app/api/models/[id]/publish/route.ts
+new file mode 100644
+index 0000000..5405f81
+--- /dev/null
++++ b/app/api/models/[id]/publish/route.ts
+@@ -0,0 +1,39 @@
++import { NextResponse } from 'next/server'
++import { auth } from '@/lib/auth'
++import { publishModel } from '@/lib/db/models'
++
++export async function POST(
++  _request: Request,
++  { params }: { params: Promise<{ id: string }> }
++): Promise<Response> {
++  const session = await auth()
++  if (!session?.user?.userId) {
++    return NextResponse.json(
++      { error: 'Authentication required', code: 'UNAUTHENTICATED' },
++      { status: 401 }
++    )
++  }
++  const userId = session.user.userId
++
++  try {
++    const { id } = await params
++
++    let model
++    try {
++      model = publishModel(id, userId)
++    } catch {
++      return NextResponse.json(
++        { error: 'Model not found or not a draft', code: 'NOT_FOUND' },
++        { status: 404 }
++      )
++    }
++
++    return NextResponse.json(model)
++  } catch (error) {
++    console.error('[POST /api/models/[id]/publish]', error)
++    return NextResponse.json(
++      { error: 'Internal server error', code: 'INTERNAL_ERROR' },
++      { status: 500 }
++    )
++  }
++}
+
+### UNTRACKED FILE: components/upload/ModelMetadataForm.tsx (full content as added)
+diff --git a/components/upload/ModelMetadataForm.tsx b/components/upload/ModelMetadataForm.tsx
+new file mode 100644
+index 0000000..f881bde
+--- /dev/null
++++ b/components/upload/ModelMetadataForm.tsx
+@@ -0,0 +1,200 @@
++'use client'
++
++import { forwardRef, useEffect, useImperativeHandle } from 'react'
++import { useForm, useWatch, Controller } from 'react-hook-form'
++import { zodResolver } from '@hookform/resolvers/zod'
++import { modelMetadataSchema, type ModelMetadataFormValues } from '@/lib/validations'
++import { FILAMENT_TYPES } from '@/lib/constants'
++import { useWizardStore } from '@/stores/wizardStore'
++import { Label } from '@/components/ui/label'
++import { Input } from '@/components/ui/input'
++import { Textarea } from '@/components/ui/textarea'
++import {
++  Select,
++  SelectContent,
++  SelectItem,
++  SelectTrigger,
++  SelectValue,
++} from '@/components/ui/select'
++
++export interface MetadataFormHandle {
++  submit: () => void
++}
++
++interface Props {
++  initialValues?: Partial<ModelMetadataFormValues>
++  onSubmitSuccess: () => void
++  onCompletenessChange: (isComplete: boolean) => void
++}
++
++export const ModelMetadataForm = forwardRef<MetadataFormHandle, Props>(
++  ({ initialValues, onSubmitSuccess, onCompletenessChange }, ref) => {
++    const setMetadata = useWizardStore((s) => s.setMetadata)
++    const {
++      control,
++      handleSubmit,
++      formState: { errors },
++    } = useForm<ModelMetadataFormValues>({
++      // eslint-disable-next-line @typescript-eslint/no-explicit-any
++      resolver: zodResolver(modelMetadataSchema) as any,
++      defaultValues: initialValues as ModelMetadataFormValues | undefined,
++      mode: 'onSubmit',
++    })
++
++    const watched = useWatch({ control }) as Partial<ModelMetadataFormValues>
++
++    useEffect(() => {
++      const complete = Boolean(
++        watched.title?.trim() &&
++          watched.description?.trim() &&
++          watched.layerHeightMm !== undefined &&
++          watched.layerHeightMm !== null &&
++          String(watched.layerHeightMm) !== '' &&
++          watched.infillPercent !== undefined &&
++          watched.infillPercent !== null &&
++          String(watched.infillPercent) !== '' &&
++          watched.supportsRequired &&
++          watched.filamentType
++      )
++      onCompletenessChange(complete)
++    }, [watched, onCompletenessChange])
++
++    useImperativeHandle(ref, () => ({
++      submit: () =>
++        handleSubmit((data) => {
++          setMetadata(data)
++          onSubmitSuccess()
++        })(),
++    }))
++
++    return (
++      <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
++        <div className="space-y-1">
++          <Label htmlFor="title">Title</Label>
++          <Controller
++            name="title"
++            control={control}
++            render={({ field }) => (
++              <Input id="title" {...field} placeholder="e.g. Articulated Dragon" />
++            )}
++          />
++          {errors.title && (
++            <p className="text-sm text-destructive">{errors.title.message}</p>
++          )}
++        </div>
++
++        <div className="space-y-1">
++          <Label htmlFor="description">Description</Label>
++          <Controller
++            name="description"
++            control={control}
++            render={({ field }) => (
++              <Textarea
++                id="description"
++                {...field}
++                className="resize-none"
++                rows={4}
++                placeholder="Describe your model..."
++              />
++            )}
++          />
++          {errors.description && (
++            <p className="text-sm text-destructive">{errors.description.message}</p>
++          )}
++        </div>
++
++        <div className="space-y-1">
++          <Label htmlFor="layerHeightMm">Layer Height (mm)</Label>
++          <Controller
++            name="layerHeightMm"
++            control={control}
++            render={({ field }) => (
++              <Input
++                id="layerHeightMm"
++                type="number"
++                step="0.05"
++                min="0.05"
++                max="1.0"
++                {...field}
++              />
++            )}
++          />
++          <p className="text-sm text-text-muted">Layer height in mm, e.g. 0.2</p>
++          {errors.layerHeightMm && (
++            <p className="text-sm text-destructive">{errors.layerHeightMm.message}</p>
++          )}
++        </div>
++
++        <div className="space-y-1">
++          <Label htmlFor="infillPercent">Infill %</Label>
++          <Controller
++            name="infillPercent"
++            control={control}
++            render={({ field }) => (
++              <Input
++                id="infillPercent"
++                type="number"
++                min="0"
++                max="100"
++                {...field}
++              />
++            )}
++          />
++          <p className="text-sm text-text-muted">Percentage fill, e.g. 20</p>
++          {errors.infillPercent && (
++            <p className="text-sm text-destructive">{errors.infillPercent.message}</p>
++          )}
++        </div>
++
++        <div className="space-y-1">
++          <Label htmlFor="supportsRequired">Supports Required</Label>
++          <Controller
++            name="supportsRequired"
++            control={control}
++            render={({ field }) => (
++              <Select onValueChange={field.onChange} defaultValue={field.value}>
++                <SelectTrigger id="supportsRequired">
++                  <SelectValue placeholder="Select..." />
++                </SelectTrigger>
++                <SelectContent>
++                  <SelectItem value="true">Yes</SelectItem>
++                  <SelectItem value="false">No</SelectItem>
++                </SelectContent>
++              </Select>
++            )}
++          />
++          {errors.supportsRequired && (
++            <p className="text-sm text-destructive">{errors.supportsRequired.message}</p>
++          )}
++        </div>
++
++        <div className="space-y-1">
++          <Label htmlFor="filamentType">Filament Type</Label>
++          <Controller
++            name="filamentType"
++            control={control}
++            render={({ field }) => (
++              <Select onValueChange={field.onChange} defaultValue={field.value}>
++                <SelectTrigger id="filamentType">
++                  <SelectValue placeholder="Select..." />
++                </SelectTrigger>
++                <SelectContent>
++                  {FILAMENT_TYPES.map((type) => (
++                    <SelectItem key={type} value={type}>
++                      {type}
++                    </SelectItem>
++                  ))}
++                </SelectContent>
++              </Select>
++            )}
++          />
++          {errors.filamentType && (
++            <p className="text-sm text-destructive">{errors.filamentType.message}</p>
++          )}
++        </div>
++      </form>
++    )
++  }
++)
++
++ModelMetadataForm.displayName = 'ModelMetadataForm'
+
+### UNTRACKED FILE: components/upload/TagSelector.tsx (full content as added)
+diff --git a/components/upload/TagSelector.tsx b/components/upload/TagSelector.tsx
+new file mode 100644
+index 0000000..aebce1f
+--- /dev/null
++++ b/components/upload/TagSelector.tsx
+@@ -0,0 +1,82 @@
++'use client'
++
++import { useState } from 'react'
++import { cn } from '@/lib/utils'
++import { PREDEFINED_TAGS } from '@/lib/constants'
++import { useWizardStore } from '@/stores/wizardStore'
++
++export function TagSelector() {
++  const [inputValue, setInputValue] = useState('')
++  const { selectedPredefinedTagIds, customTagNames, togglePredefinedTag, addCustomTag, removeCustomTag } =
++    useWizardStore()
++
++  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
++    if (e.key === 'Enter') {
++      e.preventDefault()
++      const trimmed = inputValue.trim()
++      if (trimmed) {
++        addCustomTag(trimmed)
++        setInputValue('')
++      }
++    }
++  }
++
++  return (
++    <div className="space-y-4">
++      <div>
++        <p className="text-sm font-medium text-text-primary mb-2">Categories</p>
++        <div className="flex flex-wrap gap-2">
++          {PREDEFINED_TAGS.map((tag) => {
++            const selected = selectedPredefinedTagIds.includes(tag.id)
++            return (
++              <button
++                key={tag.id}
++                role="checkbox"
++                aria-checked={selected}
++                onClick={() => togglePredefinedTag(tag.id)}
++                className={cn(
++                  'px-3 py-1 rounded-full text-sm border-2 transition-colors',
++                  selected
++                    ? 'bg-brand-primary border-brand-primary text-white'
++                    : 'bg-bg-page border-border text-text-muted hover:border-brand-primary/50'
++                )}
++              >
++                {tag.name}
++              </button>
++            )
++          })}
++        </div>
++      </div>
++
++      <div>
++        <p className="text-sm font-medium text-text-primary mb-2 mt-4">Custom Tags</p>
++        <input
++          type="text"
++          value={inputValue}
++          onChange={(e) => setInputValue(e.target.value)}
++          onKeyDown={handleKeyDown}
++          placeholder="Add custom tag..."
++          aria-label="Add custom tag"
++          className="w-full rounded-md border border-border bg-bg-page px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-brand-primary"
++        />
++        <div aria-live="polite" className="flex flex-wrap gap-2 mt-2">
++          {customTagNames.map((name) => (
++            <span
++              key={name}
++              className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm bg-brand-light border border-brand-primary text-text-primary"
++            >
++              <span>{name}</span>
++              <button
++                onClick={() => removeCustomTag(name)}
++                aria-label={`Remove tag ${name}`}
++                className="ml-1 leading-none hover:text-destructive"
++              >
++                ×
++              </button>
++            </span>
++          ))}
++        </div>
++      </div>
++    </div>
++  )
++}
+
+### UNTRACKED FILE: components/upload/PublishPreview.tsx (full content as added)
+diff --git a/components/upload/PublishPreview.tsx b/components/upload/PublishPreview.tsx
+new file mode 100644
+index 0000000..e6c73f7
+--- /dev/null
++++ b/components/upload/PublishPreview.tsx
+@@ -0,0 +1,168 @@
++'use client'
++
++import { useState } from 'react'
++import { useRouter } from 'next/navigation'
++import { toast } from 'sonner'
++import Image from 'next/image'
++import { useWizardStore } from '@/stores/wizardStore'
++import { PREDEFINED_TAGS } from '@/lib/constants'
++import { Button } from '@/components/ui/button'
++import { Checkbox } from '@/components/ui/checkbox'
++import { Label } from '@/components/ui/label'
++import { Badge } from '@/components/ui/badge'
++import type { AsyncState } from '@/types/api'
++
++export function PublishPreview() {
++  const router = useRouter()
++  const [isConsented, setIsConsented] = useState(false)
++  const [publishState, setPublishState] = useState<AsyncState>('idle')
++
++  const {
++    draftId,
++    metadata,
++    files,
++    photos,
++    selectedPredefinedTagIds,
++    customTagNames,
++    setDraftId,
++  } = useWizardStore()
++
++  const firstPhoto = photos[0]
++
++  const tagLabels = [
++    ...(selectedPredefinedTagIds
++      .map((id) => PREDEFINED_TAGS.find((t) => t.id === id)?.name)
++      .filter(Boolean) as string[]),
++    ...customTagNames,
++  ]
++
++  async function handlePublish() {
++    setPublishState('loading')
++    try {
++      let currentDraftId = draftId
++
++      if (!currentDraftId) {
++        const res = await fetch('/api/models', {
++          method: 'POST',
++          headers: { 'Content-Type': 'application/json' },
++          body: JSON.stringify({
++            title: metadata!.title,
++            description: metadata!.description,
++            layerHeightMm: metadata!.layerHeightMm,
++            infillPercent: metadata!.infillPercent,
++            supportsRequired: metadata!.supportsRequired,
++            filamentType: metadata!.filamentType,
++            files,
++            photos,
++            tagIds: selectedPredefinedTagIds,
++            customTagNames,
++          }),
++        })
++        const data = await res.json()
++        if (!res.ok) {
++          toast.error(data.error ?? 'Failed to create draft')
++          setPublishState('error')
++          return
++        }
++        currentDraftId = data.id
++        setDraftId(data.id)
++      }
++
++      const pubRes = await fetch(`/api/models/${currentDraftId}/publish`, { method: 'POST' })
++      const pubData = await pubRes.json()
++      if (!pubRes.ok) {
++        toast.error(pubData.error ?? 'Publish failed')
++        setPublishState('error')
++        return
++      }
++
++      toast.success('Your model is live!')
++      router.push(`/models/${pubData.id}`)
++    } catch {
++      toast.error('An unexpected error occurred')
++      setPublishState('error')
++    }
++  }
++
++  return (
++    <div className="space-y-6">
++      <h2 className="text-lg font-semibold text-text-primary">Preview your listing</h2>
++
++      {/* Preview card */}
++      <div className="rounded-lg border border-border p-4 space-y-4">
++        <div className="flex gap-4 items-start">
++          {firstPhoto?.previewUrl ? (
++            <Image
++              src={firstPhoto.previewUrl}
++              alt="Preview"
++              width={80}
++              height={80}
++              className="rounded object-cover flex-shrink-0"
++            />
++          ) : (
++            <div className="w-20 h-20 rounded bg-muted flex-shrink-0" />
++          )}
++          <div className="min-w-0">
++            <p className="font-semibold text-text-primary truncate">{metadata?.title ?? '—'}</p>
++            <p className="text-sm text-text-muted mt-1 line-clamp-3">
++              {metadata?.description
++                ? metadata.description.slice(0, 120) + (metadata.description.length > 120 ? '…' : '')
++                : '—'}
++            </p>
++            <p className="text-xs text-text-muted mt-1">0 downloads</p>
++          </div>
++        </div>
++
++        {/* Metadata table */}
++        <dl className="grid grid-cols-2 gap-2 text-sm">
++          <dt className="text-text-muted">Layer Height</dt>
++          <dd className="font-medium">{metadata?.layerHeightMm != null ? `${metadata.layerHeightMm} mm` : '—'}</dd>
++          <dt className="text-text-muted">Infill</dt>
++          <dd className="font-medium">{metadata?.infillPercent != null ? `${metadata.infillPercent}%` : '—'}</dd>
++          <dt className="text-text-muted">Supports</dt>
++          <dd className="font-medium">
++            {metadata?.supportsRequired === 'true'
++              ? 'Yes'
++              : metadata?.supportsRequired === 'false'
++                ? 'No'
++                : '—'}
++          </dd>
++          <dt className="text-text-muted">Filament</dt>
++          <dd className="font-medium">{metadata?.filamentType ?? '—'}</dd>
++        </dl>
++
++        {/* Tags */}
++        {tagLabels.length > 0 && (
++          <div className="flex flex-wrap gap-1">
++            {tagLabels.map((label) => (
++              <Badge key={label} variant="secondary">
++                {label}
++              </Badge>
++            ))}
++          </div>
++        )}
++      </div>
++
++      {/* License consent */}
++      <div className="flex items-center gap-3">
++        <Checkbox
++          id="license"
++          checked={isConsented}
++          onCheckedChange={(v) => setIsConsented(Boolean(v))}
++        />
++        <Label htmlFor="license" className="text-sm cursor-pointer">
++          I confirm this is my original work and grant free-to-download rights
++        </Label>
++      </div>
++
++      {/* Publish button */}
++      <Button
++        variant="default"
++        disabled={!isConsented || publishState === 'loading'}
++        onClick={handlePublish}
++      >
++        {publishState === 'loading' ? 'Publishing…' : 'Publish'}
++      </Button>
++    </div>
++  )
++}

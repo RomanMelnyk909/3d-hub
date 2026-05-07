@@ -75,6 +75,15 @@
 - TOCTOU gap between `db.exec(schema)` and ALTER TABLE in `createConnection` — on concurrent cold-starts SQLite's file lock prevents corruption but the race error is silently caught; acceptable for single-process dev/VPS but flag if moving to multi-worker serverless (`lib/db/index.ts:~24-30`)
 - Creator username enumeration via unauthenticated search suggestions — `getSearchSuggestions` exposes all usernames via LIKE query with no auth or rate limit; by design for a public creator-discovery platform; revisit if privacy requirements change (`lib/db/search.ts:~89-93`)
 
+## Deferred from: code review of 3-3-category-pages-navigation (2026-05-07)
+
+- Double `getCategoryBySlug` DB calls per request — `generateMetadata` and the page body each issue a separate prepared-statement query for the same slug; no deduplication (`app/categories/[slug]/page.tsx`)
+- Prepared statements created inline instead of at module scope — `db.prepare()` inside `listCategories` and `getCategoryBySlug` recompiles on every call; move to module-level constants for performance (`lib/db/categories.ts`)
+- No slug/category input length or format validation — URL params forwarded to SQL as-is; parameterized queries prevent injection but allow unbounded-length strings; add a format guard at the route level before going to production under load
+- Loading skeleton hardcodes 6 pill skeletons — actual category count is 11; the mismatch causes minor CLS on homepage load (`app/(marketing)/loading.tsx`)
+- Category page has no "All models" / deselect affordance — `/categories/[slug]` has no breadcrumb or back link to the unfiltered view; users must use the browser Back button or Navbar (`app/categories/[slug]/page.tsx`)
+- Empty `categories` table renders an empty scrollable gap — `CategoryPills` outputs a `<div>` with margin/scroll styles but no children when DB has no categories; add `categories.length > 0` guard or an empty-state message (`components/model/CategoryPills.tsx`)
+
 ## Deferred from: code review of 3-2-model-card-component-homepage-grid (2026-05-07)
 
 - `MODEL_CARD_FIELDS` SQL constant hardcodes table alias `m` — any future caller that omits `FROM models m` will get a runtime SQL error with no compile-time warning (`lib/db/models.ts:44`)

@@ -15,6 +15,12 @@ export async function Navbar() {
           >
             3D Hub
           </Link>
+          <Link
+            href="/"
+            className="hidden sm:block text-sm text-text-muted hover:text-text-primary transition-colors"
+          >
+            Browse
+          </Link>
           <NavbarActions user={session?.user ?? null} />
         </div>
       </div>
