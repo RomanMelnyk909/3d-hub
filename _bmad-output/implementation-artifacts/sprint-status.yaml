@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-04
-last_updated: 2026-05-07  # story 3-4 done
+last_updated: 2026-05-12  # story 4-1 done
 project: 3d-hub  # updated: story 1-5 done
 project_key: NOKEY
 tracking_system: file-system
@@ -68,8 +68,8 @@ development_status:
   epic-3-retrospective: optional
 
   # Epic 4: Model Evaluation & Download
-  epic-4: backlog
-  4-1-model-detail-page: backlog
+  epic-4: in-progress
+  4-1-model-detail-page: done
   4-2-download-flow-registration-gate: backlog
   epic-4-retrospective: optional
 

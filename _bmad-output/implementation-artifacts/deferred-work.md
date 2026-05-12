@@ -94,6 +94,19 @@
 - No `focus-within` on `<article>` — hover shadow/border styles do not activate on keyboard focus; add `focus-within:shadow-md focus-within:border-brand-primary/30` for keyboard users (`components/model/ModelCard.tsx:12`)
 - Stale or oversized `?page=N` bookmark renders empty main grid with misleading "No models available yet" message instead of redirecting to page 1 (`app/(marketing)/page.tsx:39`)
 
+## Deferred from: code review of 4-1-model-detail-page (2026-05-12)
+
+- `/api/files/` endpoint is unauthenticated — draft/unpublished model photos publicly accessible by UUID; tracked in deferred-work from Story 2-2; must add auth or signed-URL gating before VPS/CDN deployment
+- `db.prepare()` called inline inside `getModelPhotos`, `getModelFiles`, `getModelTagNames` — compiles a new SQLite statement on every invocation; move to module-level constants for performance (existing pattern in project)
+- `SELECT *` with unchecked TypeScript cast in `getModelPhotos`/`getModelFiles` — schema column rename would silently produce undefined at runtime; switch to explicit column list if schema evolves
+- `created_at * 1000` conversion without null guard in `getModelPhotos`/`getModelFiles` — `new Date(null).toISOString()` would throw; DB `NOT NULL` constraint is the actual guard; add explicit check if DB constraints are ever loosened
+- Race condition between `generateMetadata` and page render — model could be deleted/unpublished in the milliseconds between the two `getModelById` calls; theoretical with synchronous single-file SQLite; accept or re-check model status in page if concurrent deletions become realistic
+- `<h1>` title placed in right sidebar rather than spanning the full page width — layout design choice; download button is visible above fold on typical viewport heights; revisit if UX testing shows confusion
+- Lightbox CLS concern — `<Image fill>` inside `max-w-4xl max-h-screen p-12` container; constraints mitigate layout shift but no explicit `aspect-ratio` on the wrapper
+- `description` rendered with `whitespace-pre-wrap` but no `overflow-wrap: break-word` — very long unbroken strings can overflow container on narrow mobile viewports; add `break-words` class if content policy allows arbitrary descriptions
+- Long tag names can overflow the `flex-wrap` badge container — no max-length validation at DB level; add `truncate` or `max-w-[Xrem]` to `<Badge>` if tag names can be user-defined
+- Thumbnail strip has no scroll indicator for 10+ photo models — `overflow-x-auto` enables scrolling but no fade/arrow hints; UX improvement deferred
+
 ## Deferred from: code review of 3-4-search-bar-filters-empty-states (2026-05-07)
 
 - Double SearchBar instances both mounted — desktop and mobile bars each fire a separate debounced fetch per keystroke; fix requires context-based shared state or dynamic rendering (`components/layout/Navbar.tsx`)

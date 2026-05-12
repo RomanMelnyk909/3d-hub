@@ -1,5 +1,5 @@
 import { basename } from 'path'
-import type { Model, DraftModel, ModelCardData } from '@/types/model'
+import type { Model, DraftModel, ModelCardData, ModelPhoto, ModelFile } from '@/types/model'
 import type { PaginatedResponse } from '@/types/api'
 import { db } from './index'
 import { PAGE_SIZE } from '@/lib/constants'
@@ -164,6 +164,47 @@ export function listModelsByUser(userId: string): Model[] {
     .prepare('SELECT * FROM models WHERE user_id = ? ORDER BY created_at DESC')
     .all(userId) as DbModelRow[]
   return rows.map(mapRowToModel)
+}
+
+export function getModelPhotos(modelId: string): ModelPhoto[] {
+  const rows = db.prepare(
+    'SELECT * FROM model_photos WHERE model_id = ? ORDER BY display_order ASC'
+  ).all(modelId) as {
+    id: string; model_id: string; filename: string; alt_text: string | null;
+    display_order: number; created_at: number
+  }[]
+  return rows.map(row => ({
+    id: row.id,
+    modelId: row.model_id,
+    filename: row.filename,
+    altText: row.alt_text,
+    displayOrder: row.display_order,
+    createdAt: new Date(row.created_at * 1000).toISOString(),
+  }))
+}
+
+export function getModelFiles(modelId: string): ModelFile[] {
+  const rows = db.prepare(
+    'SELECT * FROM model_files WHERE model_id = ? ORDER BY created_at ASC'
+  ).all(modelId) as {
+    id: string; model_id: string; filename: string; file_size_bytes: number;
+    original_name: string; created_at: number
+  }[]
+  return rows.map(row => ({
+    id: row.id,
+    modelId: row.model_id,
+    filename: row.filename,
+    fileSizeBytes: row.file_size_bytes,
+    originalName: row.original_name,
+    createdAt: new Date(row.created_at * 1000).toISOString(),
+  }))
+}
+
+export function getModelTagNames(modelId: string): string[] {
+  const rows = db.prepare(
+    'SELECT t.name FROM tags t JOIN model_tags mt ON t.id = mt.tag_id WHERE mt.model_id = ? ORDER BY t.name ASC'
+  ).all(modelId) as { name: string }[]
+  return rows.map(r => r.name)
 }
 
 export function createModelFiles(modelId: string, files: WizardFileInput[]): void {
